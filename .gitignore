@@ -1,0 +1,551 @@
+# ============================================================
+# DabaPulse — Global Git Ignore
+# ============================================================
+# Purpose:
+# - Protect secrets and credentials
+# - Prevent personal/sensitive data from being committed
+# - Ignore local development artifacts
+# - Ignore generated files and dependencies
+# - Keep the repository clean and reproducible
+# ============================================================
+
+
+# ============================================================
+# 1. ENVIRONMENT VARIABLES & SECRETS
+# ============================================================
+
+.env
+.env.*
+!.env.example
+
+# Local environment overrides
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Secret/config files
+*.secret
+*.secrets
+secrets/
+.secret/
+.credentials/
+credentials/
+
+# API keys / tokens / private configuration
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Service account credentials
+service-account*.json
+service_account*.json
+*-credentials.json
+*-service-account.json
+
+# Firebase / Google credentials
+firebase-adminsdk*.json
+google-credentials*.json
+
+# ============================================================
+# 2. PERSONAL & SENSITIVE DATA
+# ============================================================
+
+# Real customer/user datasets
+data/raw/
+data/private/
+data/personal/
+data/confidential/
+data/customer/
+data/customers/
+data/users/
+data/clients/
+
+# Personally identifiable information
+**/*pii*
+**/*PII*
+**/*personal-data*
+**/*personal_data*
+**/*sensitive-data*
+**/*sensitive_data*
+**/*confidential*
+
+# Real exports
+**/*customer-export*
+**/*customer_export*
+**/*user-export*
+**/*user_export*
+**/*client-export*
+**/*client_export*
+
+# Contact information exports
+**/*contacts*.csv
+**/*contacts*.xlsx
+**/*contacts*.json
+
+# Transaction/customer exports
+**/*orders*.csv
+**/*orders*.xlsx
+**/*orders*.json
+**/*transactions*.csv
+**/*transactions*.xlsx
+**/*transactions*.json
+
+# Logs that may contain personal information
+*.log
+logs/
+
+# ============================================================
+# 3. DATASET PROTECTION
+# ============================================================
+
+# Large/raw datasets
+data/raw/
+data/private/
+data/external/
+data/downloaded/
+
+# Generated datasets
+data/generated/
+data/processed/
+data/interim/
+data/cache/
+
+# Local experimentation
+data/tmp/
+data/temp/
+
+# Database dumps
+*.sql
+*.sql.gz
+*.dump
+*.bak
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================================================
+# 4. MACHINE LEARNING / AI ARTIFACTS
+# ============================================================
+
+# Model checkpoints
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.safetensors
+*.bin
+
+# TensorFlow
+*.h5
+*.keras
+saved_model/
+
+# ML experiment outputs
+runs/
+mlruns/
+wandb/
+checkpoints/
+models/
+artifacts/
+
+# Jupyter outputs
+.ipynb_checkpoints/
+
+# Experiment caches
+.cache/
+.cache/**
+**/.cache/
+
+# ============================================================
+# 5. PYTHON — BACKEND / DATA / AI
+# ============================================================
+
+# Python cache
+__pycache__/
+**/__pycache__/
+
+*.py[cod]
+*$py.class
+
+# Python build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Python tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.tox/
+.nox/
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+
+# Packaging
+pip-wheel-metadata/
+
+# ============================================================
+# 6. JUPYTER / NOTEBOOK TEMPORARY FILES
+# ============================================================
+
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Temporary notebook exports
+*.nbconvert.ipynb
+
+# ============================================================
+# 7. NODE.JS / JAVASCRIPT / TYPESCRIPT
+# ============================================================
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Package manager caches
+.npm/
+.pnpm-store/
+.yarn/
+.yarn-cache/
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+.svelte-kit/
+.vite/
+
+# Coverage
+coverage/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime files
+*.pid
+*.pid.lock
+
+# ============================================================
+# 8. FRONTEND FRAMEWORK ARTIFACTS
+# ============================================================
+
+# Vite
+.vite/
+
+# React / Next
+.next/
+.vercel/
+
+# Storybook
+storybook-static/
+
+# Temporary frontend files
+*.local
+
+# ============================================================
+# 9. IDE / EDITOR FILES
+# ============================================================
+
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# JetBrains
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Visual Studio
+.vs/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+.#*
+\#*\#
+
+# ============================================================
+# 10. OPERATING SYSTEM FILES
+# ============================================================
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+
+# ============================================================
+# 11. TEMPORARY FILES
+# ============================================================
+
+*.tmp
+*.temp
+tmp/
+temp/
+.tmp/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Generated reports
+*.generated.*
+*.export.*
+*.snapshot
+
+# ============================================================
+# 12. GENERATED DOCUMENTS / EXPORTS
+# ============================================================
+
+# Temporary exports
+exports/
+export/
+generated/
+generated-files/
+
+# PDF exports generated locally
+*.generated.pdf
+
+# Temporary presentation/document exports
+*.generated.docx
+*.generated.pptx
+*.generated.xlsx
+
+# ============================================================
+# 13. LOCAL TESTING / DEVELOPMENT
+# ============================================================
+
+test-results/
+playwright-report/
+blob-report/
+.nyc_output/
+
+# Cypress
+cypress/videos/
+cypress/screenshots/
+
+# Local development servers
+*.pid
+*.pid.lock
+
+# ============================================================
+# 14. DOCKER / LOCAL CONTAINERS
+# ============================================================
+
+# Local Docker environment files
+docker-compose.override.yml
+docker-compose.local.yml
+
+# Docker volumes
+.docker/
+docker-data/
+docker-volumes/
+
+# ============================================================
+# 15. TERRAFORM / INFRASTRUCTURE LOCAL STATE
+# ============================================================
+
+.terraform/
+.terraform.lock.hcl
+
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# ============================================================
+# 16. CLOUD / DEPLOYMENT LOCAL FILES
+# ============================================================
+
+# Vercel
+.vercel/
+
+# Netlify
+.netlify/
+
+# Serverless
+.serverless/
+
+# Supabase local state
+.supabase/
+supabase/.branches/
+supabase/.temp/
+
+# ============================================================
+# 17. CERTIFICATES / SECURITY MATERIAL
+# ============================================================
+
+*.pem
+*.key
+*.csr
+*.der
+*.p7b
+*.p7c
+*.p12
+*.pfx
+
+# SSH keys accidentally copied into the repository
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# ============================================================
+# 18. LOCAL CONFIGURATION
+# ============================================================
+
+*.local.json
+*.local.yaml
+*.local.yml
+*.local.toml
+
+config.local.*
+settings.local.*
+
+# ============================================================
+# 19. CHAT / AI / TOOLING LOCAL DATA
+# ============================================================
+
+# Local AI tool state
+.claude/
+.cursor/
+.copilot/
+
+# Local prompt/test data that may contain proprietary information
+prompts/local/
+ai/local/
+ai/private/
+
+# ============================================================
+# 20. LARGE FILES / LOCAL MEDIA
+# ============================================================
+
+# Local recordings
+*.mp4
+*.mov
+*.avi
+*.mkv
+
+# Local audio
+*.mp3
+*.wav
+*.m4a
+
+# Local large images
+*.psd
+*.ai
+*.raw
+
+# ============================================================
+# 21. DABAPULSE-SPECIFIC PROTECTION
+# ============================================================
+
+# Real DABA data must never be committed accidentally
+data/daba/
+data/daba-real/
+data/daba-production/
+
+# Real business exports
+data/business/
+data/production/
+
+# Synthetic data is allowed to be versioned.
+# Keep synthetic datasets outside the ignored directories above.
+
+# Local dashboard exports
+dashboard-exports/
+dashboard_exports/
+
+# Local analytics exports
+analytics-exports/
+analytics_exports/
+
+# Local decision-engine outputs
+decision-outputs/
+decision_outputs/
+
+# Local simulation results
+simulation-results/
+simulation_results/
+
+# ============================================================
+# 22. LOCAL DOCUMENTS CONTAINING PRIVATE INFORMATION
+# ============================================================
+
+# Personal working documents
+private/
+_private/
+personal/
+_personal/
+
+# Team-private working material
+team-private/
+team_private/
+
+# ============================================================
+# 23. MISCELLANEOUS
+# ============================================================
+
+# OS/browser temporary files
+*.stackdump
+
+# Lock files generated by some tools
+*.lock
+
+# Local history
+.history/
+
+# Temporary patch files
+*.patch
+*.rej
+
+# ============================================================
+# END — DabaPulse .gitignore
+# ============================================================
