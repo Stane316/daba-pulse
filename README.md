@@ -1,10 +1,4 @@
-Oui. Et je corrige d'abord un point important : **le nom actuel de la plateforme est DabaPulse**, pas Daba Intelligence. Le nom pourra évoluer plus tard, mais le repository doit maintenant refléter ce nom de travail.
 
-J'ai aussi recroisé le README avec le cadrage final de l'équipe : le cœur est bien le **Revenue-at-Risk Decision Engine + Smart Distribution**, avec le Business Twin comme vision long terme, et non un dashboard générique.  La stack recommandée est React/Vite/Tailwind côté frontend, Python/FastAPI côté backend, Pandas/NumPy pour la data, avec Risk Engine, Decision Engine, simulation et couche IA découplée. 
-
-Voici donc le **README.md complet**, prêt à copier-coller.
-
-````markdown
 # DabaPulse
 
 > **Turn business signals into decisions. Protect revenue before it's lost.**
