@@ -44,3 +44,4 @@ Réévaluer dès publication stable de `react-router-dom@8.x` compatible.
 ## CORS
 
 En production, remplacer `CORS_ORIGINS=*` par l’URL Netlify exacte.
+
