@@ -95,7 +95,6 @@ async def data_upload(
     if not content:
         raise HTTPException(status_code=400, detail={"message": "Fichier vide."})
 
-    # Charger d'abord le sample pour boutiques/produits/visibilité de référence
     if not store.is_loaded:
         try:
             store.load()
@@ -241,7 +240,7 @@ def export_decision_get(
     quantite: float | None = None,
     format: str = Query(default="json", pattern="^(json|markdown)$"),
 ) -> Response:
-    return _export_decision(situation_id, quantite, format)  # type: ignore[arg-type]
+    return _export_decision(situation_id, quantite, format)
 
 
 def _export_decision(
@@ -267,7 +266,9 @@ def _export_decision(
             content=result,
             media_type="text/markdown; charset=utf-8",
             headers={
-                "Content-Disposition": f'attachment; filename="dabapulse-decision-{safe_id}.md"'
+                "Content-Disposition": (
+                    f'attachment; filename="dabapulse-decision-{safe_id}.md"'
+                )
             },
         )
 
@@ -277,7 +278,9 @@ def _export_decision(
         content=body,
         media_type="application/json; charset=utf-8",
         headers={
-            "Content-Disposition": f'attachment; filename="dabapulse-decision-{safe_id}.json"'
+            "Content-Disposition": (
+                f'attachment; filename="dabapulse-decision-{safe_id}.json"'
+            )
         },
     )
 

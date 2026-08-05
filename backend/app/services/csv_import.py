@@ -28,11 +28,7 @@ class CsvValidationError(ValueError):
 
 
 def parse_ventes_csv(content: bytes | str) -> tuple[pd.DataFrame, list[str]]:
-    """Parse et valide un CSV ventes/stocks.
-
-    Returns:
-        (dataframe normalisé, warnings)
-    """
+    """Parse et valide un CSV ventes/stocks."""
     warnings: list[str] = []
     try:
         if isinstance(content, bytes):
@@ -54,7 +50,6 @@ def parse_ventes_csv(content: bytes | str) -> tuple[pd.DataFrame, list[str]]:
     if df.empty:
         raise CsvValidationError("Le fichier CSV est vide.", {"nb_lignes": 0})
 
-    # normalise column names
     df.columns = [str(c).strip() for c in df.columns]
     missing = [c for c in REQUIRED_VENTES_COLUMNS if c not in df.columns]
     if missing:
@@ -83,7 +78,11 @@ def parse_ventes_csv(content: bytes | str) -> tuple[pd.DataFrame, list[str]]:
     if null_counts.any():
         warnings.append(
             "Valeurs non numériques détectées et remplacées par 0: "
-            + ", ".join(f"{c}={int(null_counts[c])}" for c in null_counts.index if null_counts[c] > 0)
+            + ", ".join(
+                f"{c}={int(null_counts[c])}"
+                for c in null_counts.index
+                if null_counts[c] > 0
+            )
         )
         df = df.fillna(0)
 

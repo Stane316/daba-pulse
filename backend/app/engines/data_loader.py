@@ -97,11 +97,10 @@ class DataStore:
         """Charge un dataframe ventes déjà validé (import utilisateur)."""
         self.warnings = list(extra_warnings or [])
         self._source_label = source_label
-        self._data_type = data_type  # type: ignore[assignment]
+        self._data_type = data_type
         self.ventes = df.sort_values("date").copy()
         self.loaded_at = datetime.utcnow().isoformat() + "Z"
         self._rebuild_refs_from_ventes()
-        # conserver visibilité / meta si déjà chargés ; sinon defaults synthétiques
         if not self.visibilite:
             self.visibilite = {
                 "date_reference": str(self.ventes["date"].max().date()),
@@ -139,7 +138,9 @@ class DataStore:
             pid_s = str(pid)
             if pid_s not in self.produits:
                 prix = float(
-                    self.ventes.loc[self.ventes["produit_id"] == pid, "prix_unitaire"].iloc[-1]
+                    self.ventes.loc[
+                        self.ventes["produit_id"] == pid, "prix_unitaire"
+                    ].iloc[-1]
                 )
                 self.produits[pid_s] = {
                     "id": pid_s,
@@ -206,7 +207,9 @@ class DataStore:
         return df.sort_values("date").tail(days)
 
     def boutique(self, bid: str) -> dict[str, Any]:
-        return self.boutiques.get(bid, {"id": bid, "nom": bid, "ville": "?", "zone": "?"})
+        return self.boutiques.get(
+            bid, {"id": bid, "nom": bid, "ville": "?", "zone": "?"}
+        )
 
     def produit(self, pid: str) -> dict[str, Any]:
         return self.produits.get(

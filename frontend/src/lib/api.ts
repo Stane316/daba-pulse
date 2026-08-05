@@ -11,7 +11,6 @@ const BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || ''
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: HeadersInit = { ...(init?.headers || {}) }
-  // Don't force JSON content-type on FormData
   if (!(init?.body instanceof FormData)) {
     ;(headers as Record<string, string>)['Content-Type'] =
       (headers as Record<string, string>)['Content-Type'] || 'application/json'
@@ -102,14 +101,15 @@ export const api = {
     }),
   hypotheses: () => request<Record<string, unknown>>('/api/hypotheses'),
 
-  /** Télécharge le résumé décisionnel (json | markdown). */
   downloadExport: async (
     situationId: string,
     opts?: { quantite?: number; format?: 'json' | 'markdown' },
   ) => {
     const format = opts?.format ?? 'markdown'
     const q =
-      opts?.quantite != null ? `&quantite=${encodeURIComponent(opts.quantite)}` : ''
+      opts?.quantite != null
+        ? `&quantite=${encodeURIComponent(opts.quantite)}`
+        : ''
     const res = await fetch(
       `${BASE}/api/export/decision/${encodeURIComponent(situationId)}?format=${format}${q}`,
     )
@@ -121,3 +121,4 @@ export const api = {
     downloadBlob(blob, `dabapulse-decision-${situationId}.${ext}`)
   },
 }
+

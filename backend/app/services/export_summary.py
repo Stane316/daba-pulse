@@ -101,7 +101,11 @@ def build_decision_summary(
     payload["synthese"] = {
         "quoi": decision.libelle if decision else situation.signal,
         "ou": (
-            (decision.boutique_destination.nom if decision and decision.boutique_destination else None)
+            (
+                decision.boutique_destination.nom
+                if decision and decision.boutique_destination
+                else None
+            )
             or (situation.boutique.nom if situation.boutique else "Global")
         ),
         "combien": decision.quantite if decision else None,
