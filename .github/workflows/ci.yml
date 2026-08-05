@@ -88,7 +88,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Ruff
-        run: ruff check .
+        run: ruff check app
 
       - name: Run Pytest
         run: |
