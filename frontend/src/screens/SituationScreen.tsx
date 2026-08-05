@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BeforeAfterTransform } from '../components/FlowDiagram'
-import { RarComparisonBars } from '../components/StockDemandChart'
+import { usePulse } from '../context/PulseContext'
 import {
+  ConfidenceBadge,
   ErrorBanner,
   GhostButton,
   LoadingScreen,
@@ -10,243 +10,293 @@ import {
   Panel,
   PrimaryButton,
   SceneQuestion,
+  ScopeTag,
+  SeverityBadge,
+  cn,
 } from '../components/ui'
-import { usePulse } from '../context/PulseContext'
-import { formatFCFA, formatNumber } from '../lib/format'
+import { api } from '../lib/api'
+import { formatFCFA, formatNumber, riskTypeLabel } from '../lib/format'
 
-export function SimulationScreen() {
-  const {
-    loading,
-    error,
-    selected,
-    decision,
-    simulation,
-    simQuantity,
-    setSimQuantity,
-    reload,
-  } = usePulse()
+export function SituationScreen() {
+  const { loading, error, summary, selectedId, selectSituation, reload } =
+    usePulse()
   const navigate = useNavigate()
-  const [localQty, setLocalQty] = useState<number | null>(null)
-
-  const qty = localQty ?? simQuantity ?? decision?.quantite ?? 0
-  const isDist = selected?.scope === 'distribution'
-
-  const maxQty = useMemo(() => {
-    if (!selected || !isDist) return 100
-    const deficit = selected.deficit_potentiel ?? 30
-    return Math.max(60, Math.ceil(deficit * 2))
-  }, [selected, isDist])
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadMsg, setUploadMsg] = useState<string | null>(null)
+  const [uploadErr, setUploadErr] = useState<string | null>(null)
 
   if (loading) return <LoadingScreen />
-  if (error) return <ErrorBanner message={error} onRetry={() => void reload()} />
-  if (!selected || !simulation)
-    return (
-      <ErrorBanner
-        message="Simulation indisponible."
-        onRetry={() => navigate('/')}
-      />
-    )
+  if (error || !summary)
+    return <ErrorBanner message={error || 'Données absentes'} onRetry={() => void reload()} />
 
-  const sim = simulation
+  const situations = summary.situations
+  const mini = summary.mini_vue
 
-  const applyQty = (v: number) => {
-    setLocalQty(v)
-    setSimQuantity(v)
-  }
-
-  const reset = () => {
-    const reco = decision?.quantite ?? sim.quantite_simulee ?? 0
-    applyQty(reco)
+  const onFile = async (file: File | null) => {
+    if (!file) return
+    setUploading(true)
+    setUploadErr(null)
+    setUploadMsg(null)
+    try {
+      const res = await api.uploadCsv(file)
+      setUploadMsg(res.message)
+      await reload()
+    } catch (e) {
+      setUploadErr(e instanceof Error ? e.message : 'Import impossible')
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
   }
 
   return (
     <div>
       <SceneQuestion
-        index={4}
-        question="Que se passe-t-il si j'applique cette décision ?"
-        eyebrow="What-if Simulator"
+        index={1}
+        question="Où DABA risque-t-elle de perdre du revenu maintenant ?"
+        eyebrow="Situation exécutive"
       />
 
-      <div className="animate-fade-up mb-6 rounded-xl border border-white/5 bg-charcoal/50 px-4 py-3 text-sm text-bone-dim">
-        <span className="text-mineral">Scénario : </span>
-        {sim.action_libelle}
-      </div>
-
-      {/* AVANT → ACTION → APRÈS */}
-      <div className="animate-fade-up delay-1 mb-8">
-        <BeforeAfterTransform
-          rarAvant={sim.revenue_at_risk_avant}
-          rarApres={sim.revenue_at_risk_apres}
-          protege={sim.revenu_potentiellement_protege}
-        />
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
-        <Panel delay={2}>
-          <div className="mb-5 text-[11px] uppercase tracking-[0.16em] text-mineral">
-            Comparaison détaillée
+      {/* Hero RaR — dominates the scene */}
+      <section className="animate-fade-up mb-10 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div className="relative overflow-hidden rounded-3xl border border-risk/20 bg-gradient-to-br from-charcoal via-charcoal to-risk/10 p-6 md:p-10">
+          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-risk/10 blur-2xl" />
+          <div className="text-[11px] uppercase tracking-[0.22em] text-risk-soft/80">
+            Revenue-at-Risk total
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[320px] text-left text-sm">
-              <thead>
-                <tr className="border-b border-white/8 text-[10px] uppercase tracking-[0.14em] text-mineral">
-                  <th className="pb-2 font-medium">Indicateur</th>
-                  <th className="pb-2 font-medium">Avant</th>
-                  <th className="pb-2 font-medium">Scénario</th>
-                  <th className="pb-2 font-medium">Δ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sim.metriques.map((m) => (
-                  <tr key={m.cle} className="border-b border-white/5">
-                    <td className="py-2.5 text-bone-dim">{m.libelle}</td>
-                    <td className="num py-2.5 text-risk-soft/90">
-                      {fmt(m.avant, m.unite)}
-                    </td>
-                    <td className="num py-2.5 text-sage-light">
-                      {fmt(m.apres, m.unite)}
-                    </td>
-                    <td className="num py-2.5 text-mineral">
-                      {fmtDelta(m.variation, m.unite, m.sens_positif)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div
+            className="num mt-3 font-display text-[clamp(2.8rem,8vw,5rem)] leading-none text-risk-soft"
+            style={{ animation: 'count-glow 3s ease-in-out infinite' }}
+          >
+            {formatNumber(summary.revenue_at_risk_total)}
           </div>
-        </Panel>
+          <div className="mt-2 text-lg text-bone-dim">FCFA exposés</div>
 
-        <div className="space-y-6">
-          <Panel delay={3}>
-            <div className="mb-4 text-[11px] uppercase tracking-[0.16em] text-mineral">
-              Revenue-at-Risk
-            </div>
-            <RarComparisonBars
-              avant={sim.revenue_at_risk_avant}
-              apres={sim.revenue_at_risk_apres}
+          <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3">
+            <MetricBlock
+              label="Distribution"
+              value={formatFCFA(summary.revenue_at_risk_distribution, true)}
+              tone="amber"
             />
-            <div className="mt-6 grid grid-cols-2 gap-4">
+            <MetricBlock
+              label="Réputation"
+              value={formatFCFA(summary.revenue_at_risk_reputation, true)}
+              tone="default"
+            />
+            <MetricBlock
+              label="Critiques"
+              value={`${summary.nb_situations_critiques} / ${summary.nb_situations_total}`}
+              tone="risk"
+            />
+          </div>
+
+          <p className="mt-6 max-w-xl text-xs leading-relaxed text-mineral">
+            {summary.disclaimer}
+          </p>
+        </div>
+
+        {/* Mini vue */}
+        <Panel className="flex flex-col justify-between" delay={1}>
+          <div>
+            <div className="mb-4 text-[11px] uppercase tracking-[0.16em] text-mineral">
+              Mini-vue opérationnelle
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <MetricBlock
-                label="Revenu protégé"
-                value={formatFCFA(sim.revenu_potentiellement_protege, true)}
-                tone="success"
+                label="Stock total"
+                value={formatNumber(mini.stock_total)}
+                hint="unités"
               />
               <MetricBlock
-                label="Disponibilité"
-                value={`${sim.disponibilite_avant} → ${sim.disponibilite_apres}`}
+                label="Demande 7j"
+                value={formatNumber(mini.demande_totale)}
+                hint="unités estimées"
+              />
+              <MetricBlock
+                label="Déficit total"
+                value={formatNumber(mini.deficit_total)}
+                tone="risk"
+                hint="unités non servies"
+              />
+              <MetricBlock
+                label="Note Google"
+                value={mini.visibilite?.note_google?.toFixed(1) ?? '—'}
+                hint={`${mini.visibilite?.nb_avis ?? 0} avis`}
+                tone="amber"
               />
             </div>
-          </Panel>
+          </div>
 
-          {isDist && (
-            <Panel delay={4}>
-              <div className="mb-3 flex items-center justify-between">
-                <div className="text-[11px] uppercase tracking-[0.16em] text-mineral">
-                  Quantité simulée
-                </div>
-                <div className="num text-lg font-semibold text-amber">
-                  {formatNumber(qty)} u.
-                </div>
+          {mini.demande_par_boutique && (
+            <div className="mt-6 space-y-2">
+              <div className="text-[10px] uppercase tracking-[0.16em] text-mineral">
+                Demande par boutique
               </div>
-              <input
-                type="range"
-                min={0}
-                max={maxQty}
-                step={1}
-                value={qty}
-                onChange={(e) => applyQty(Number(e.target.value))}
-                className="w-full"
-              />
-              <div className="mt-2 flex justify-between text-[11px] text-mineral">
-                <span>0</span>
-                <span>
-                  Recommandé : {formatNumber(decision?.quantite ?? 0)}
-                </span>
-                <span>{maxQty}</span>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {[
-                  Math.round((decision?.quantite ?? 20) * 0.5),
-                  decision?.quantite ?? 20,
-                  Math.round((decision?.quantite ?? 20) * 1.2),
-                ].map((v) => (
-                  <GhostButton key={v} onClick={() => applyQty(v)}>
-                    {v} u.
-                  </GhostButton>
-                ))}
-                <GhostButton onClick={reset}>Réinitialiser</GhostButton>
-              </div>
-              <p className="mt-4 text-[11px] leading-relaxed text-mineral">
-                Le résultat est recalculé immédiatement. La simulation examine
-                les conséquences d'une hypothèse — ce n'est pas une prédiction
-                certaine.
-              </p>
-            </Panel>
+              {mini.demande_par_boutique.slice(0, 4).map((b) => {
+                const max = mini.demande_par_boutique![0].demande || 1
+                return (
+                  <div key={b.boutique_id}>
+                    <div className="mb-0.5 flex justify-between text-[11px]">
+                      <span className="text-bone-dim">{b.nom}</span>
+                      <span className="num text-mineral">{b.demande}</span>
+                    </div>
+                    <div className="h-1 overflow-hidden rounded-full bg-charcoal-soft">
+                      <div
+                        className="h-full rounded-full bg-petrol-light"
+                        style={{ width: `${(b.demande / max) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           )}
+        </Panel>
+      </section>
+
+      <Panel className="mb-8" delay={2}>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.16em] text-mineral">
+              Observer — données
+            </div>
+            <p className="mt-1 max-w-xl text-sm text-bone-dim">
+              Importez un CSV ventes/stocks (colonnes MVP) ou conservez le jeu
+              synthétique de démonstration.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={(e) => void onFile(e.target.files?.[0] ?? null)}
+            />
+            <GhostButton disabled={uploading} onClick={() => fileRef.current?.click()}>
+              {uploading ? 'Import…' : 'Importer un CSV'}
+            </GhostButton>
+            <GhostButton
+              disabled={uploading}
+              onClick={() => {
+                void (async () => {
+                  setUploading(true)
+                  setUploadErr(null)
+                  try {
+                    await api.dataReload()
+                    setUploadMsg('Jeu synthétique de démonstration rechargé.')
+                    await reload()
+                  } catch (e) {
+                    setUploadErr(
+                      e instanceof Error ? e.message : 'Rechargement impossible',
+                    )
+                  } finally {
+                    setUploading(false)
+                  }
+                })()
+              }}
+            >
+              Recharger le sample
+            </GhostButton>
+          </div>
+        </div>
+        {uploadMsg && (
+          <p className="mt-3 text-xs text-sage-light">{uploadMsg}</p>
+        )}
+        {uploadErr && (
+          <p className="mt-3 text-xs text-risk-soft">{uploadErr}</p>
+        )}
+      </Panel>
+
+      {/* Situations prioritaires */}
+      <div className="mb-4 flex items-end justify-between gap-4">
+        <div>
+          <h2 className="font-display text-2xl text-bone">Situations prioritaires</h2>
+          <p className="mt-1 text-sm text-mineral">
+            Sélectionnez une situation pour ouvrir l'investigation.
+          </p>
         </div>
       </div>
 
-      {sim.hypotheses.length > 0 && (
-        <Panel className="mt-6" delay={5}>
-          <div className="mb-2 text-[11px] uppercase tracking-[0.16em] text-mineral">
-            Hypothèses de simulation
-          </div>
-          <ul className="space-y-1.5">
-            {sim.hypotheses.map((h) => (
-              <li key={h.cle} className="text-xs text-bone-dim">
-                <span className="text-sand">{h.libelle}</span> — {String(h.valeur)}
-              </li>
-            ))}
-          </ul>
-        </Panel>
-      )}
+      <div className="grid gap-3">
+        {situations.map((s, i) => {
+          const active = s.id === selectedId
+          return (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => selectSituation(s.id)}
+              className={cn(
+                'animate-fade-up group grid w-full grid-cols-1 items-center gap-4 rounded-2xl border p-4 text-left transition md:grid-cols-[auto_1fr_auto_auto]',
+                active
+                  ? 'border-amber/40 bg-amber/8 shadow-[0_0_0_1px_rgba(201,150,58,0.15)]'
+                  : 'border-white/5 bg-charcoal/50 hover:border-white/15 hover:bg-charcoal-soft/40',
+                i < 5 && `delay-${Math.min(i + 1, 5)}`,
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <span
+                  className={cn(
+                    'num flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold',
+                    s.severite === 'critique'
+                      ? 'bg-risk/20 text-risk-soft'
+                      : 'bg-white/5 text-mineral',
+                  )}
+                >
+                  {s.priorite}
+                </span>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <ScopeTag scope={s.scope} />
+                    <SeverityBadge value={s.severite} />
+                  </div>
+                  <div className="mt-1.5 text-sm font-medium text-bone">
+                    {s.boutique?.nom ?? 'DABA — global'}
+                    {s.produit ? (
+                      <span className="text-bone-dim"> · {s.produit.nom}</span>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
+              <div className="min-w-0">
+                <div className="truncate text-xs text-mineral">
+                  {riskTypeLabel(s.type_risque)}
+                </div>
+                <div className="mt-0.5 truncate text-sm text-bone-dim">{s.signal}</div>
+              </div>
+
+              <div className="text-left md:text-right">
+                <div className="text-[10px] uppercase tracking-[0.14em] text-mineral">
+                  Revenu exposé
+                </div>
+                <div className="num text-lg font-semibold text-risk-soft">
+                  {formatFCFA(s.revenue_at_risk, true)}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <ConfidenceBadge level={s.niveau_confiance} score={s.confiance} />
+                <span
+                  className={cn(
+                    'text-xs font-medium transition',
+                    active ? 'text-amber' : 'text-mineral group-hover:text-sand',
+                  )}
+                >
+                  {active ? 'Sélectionnée' : 'Ouvrir'}
+                </span>
+              </div>
+            </button>
+          )
+        })}
+      </div>
 
       <div className="mt-8 flex justify-end">
-        <PrimaryButton onClick={() => navigate('/explication')}>
-          Demander l'explication IA
+        <PrimaryButton onClick={() => navigate('/investigation')}>
+          Investiguer la situation sélectionnée
         </PrimaryButton>
       </div>
     </div>
   )
 }
-
-function fmt(v: string | number, unite: string) {
-  if (typeof v === 'number') {
-    if (unite === 'FCFA') return formatFCFA(v, true)
-    return `${formatNumber(v)}${unite ? ` ${unite}` : ''}`
-  }
-  return String(v)
-}
-
-function fmtDelta(
-  v: string | number,
-  unite: string,
-  sens: 'hausse' | 'baisse' | 'neutre',
-) {
-  if (typeof v !== 'number') return String(v)
-  const sign = v > 0 ? '+' : ''
-  const color =
-    sens === 'baisse'
-      ? v < 0
-        ? 'text-sage-light'
-        : v > 0
-          ? 'text-risk-soft'
-          : ''
-      : sens === 'hausse'
-        ? v > 0
-          ? 'text-sage-light'
-          : v < 0
-            ? 'text-risk-soft'
-            : ''
-        : ''
-  if (unite === 'FCFA')
-    return <span className={color}>{sign}{formatFCFA(v, true)}</span>
-  return (
-    <span className={color}>
-      {sign}
-      {formatNumber(v)}
-      {unite ? ` ${unite}` : ''}
-    </span>
-  )
-}
-

@@ -115,15 +115,29 @@ Invoke-RestMethod http://127.0.0.1:8000/api/situations/dist-B001-P005
 
 ## 8. Déploiement cible (EL-D)
 
-| Couche | Outil |
-|--------|-------|
-| Frontend | **Netlify** — build `frontend`, publish `dist`, env `VITE_API_URL` |
-| Backend | **Render** — root `backend` ou monorepo, start `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
-| Data | Bundler `data/sample` avec le service API |
-| AI | Secret `OPENAI_API_KEY` sur Render |
-| CORS | `CORS_ORIGINS=https://ton-site.netlify.app` |
+Guide détaillé : **[docs/DEPLOY.md](DEPLOY.md)**
 
-Supabase : optionnel post-MVP (persistance), pas requis pour la démo fichier.
+| Couche | Outil | Config repo |
+|--------|-------|-------------|
+| Frontend | **Netlify** | `netlify.toml`, `frontend/public/_redirects` |
+| Backend | **Render** | `render.yaml`, `scripts/start-api.sh` |
+| Data | CSV sample | `data/sample` (embarqué) |
+| AI | Secret Render | `OPENAI_API_KEY` optionnel |
+| CORS | Env Render | `CORS_ORIGINS=https://…netlify.app` |
+
+### Render (API) — résumé
+
+- Build : `pip install -r backend/requirements.txt`
+- Start : `bash scripts/start-api.sh`
+- Health : `/api/health`
+- Env : `DATA_PATH`, `CORS_ORIGINS`, secrets AI
+
+### Netlify (Front) — résumé
+
+- Base : `frontend` (voir `netlify.toml`)
+- Build : `npm ci && npm run build`
+- Publish : `dist`
+- Env **obligatoire** : `VITE_API_URL=https://<api>.onrender.com`
 
 ## 9. CI
 

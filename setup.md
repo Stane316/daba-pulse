@@ -314,10 +314,24 @@ cd frontend && npm run dev -- --host 0.0.0.0 --port 5173
 | Fichier | Contenu |
 |---------|---------|
 | `README.md` | Vision produit |
-| `docs/ENGINEERING_RUNBOOK.md` | Détails Engineering, CI, déploiement |
+| `docs/ENGINEERING_RUNBOOK.md` | Détails Engineering, CI |
+| `docs/DEPLOY.md` | Déploiement **Netlify + Render** (EL-D) |
 | `docs/ARCHITECTURE.md` | Pipeline technique |
 | `.env.example` | Variables d’environnement |
+| `render.yaml` | Blueprint API Render |
+| `netlify.toml` | Build frontend Netlify |
+
+## B9. Déploiement public (aperçu)
+
+Voir le guide complet : [`docs/DEPLOY.md`](docs/DEPLOY.md)
+
+Ordre court :
+
+1. Deploy API sur **Render** (`render.yaml` / `scripts/start-api.sh`)  
+2. Noter l’URL `https://….onrender.com`  
+3. Deploy front sur **Netlify** avec `VITE_API_URL=<url-api>`  
+4. Ajuster `CORS_ORIGINS` sur Render  
 
 ---
 
-**DabaPulse** — From business signals to better decisions.
+**DabaPulse** — From business signals to better decisions
