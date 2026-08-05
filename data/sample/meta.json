@@ -1,0 +1,88 @@
+{
+  "generated_at": "2026-08-04T22:57:14.045963Z",
+  "type": "synthetiques",
+  "version": "1.0.0",
+  "boutiques": [
+    {
+      "id": "B001",
+      "nom": "DABA Plateau",
+      "ville": "Abidjan",
+      "zone": "Centre"
+    },
+    {
+      "id": "B002",
+      "nom": "DABA Cocody",
+      "ville": "Abidjan",
+      "zone": "Est"
+    },
+    {
+      "id": "B003",
+      "nom": "DABA Yopougon",
+      "ville": "Abidjan",
+      "zone": "Ouest"
+    },
+    {
+      "id": "B004",
+      "nom": "DABA Bouaké",
+      "ville": "Bouaké",
+      "zone": "Centre-Nord"
+    },
+    {
+      "id": "B005",
+      "nom": "DABA San-Pédro",
+      "ville": "San-Pédro",
+      "zone": "Sud-Ouest"
+    }
+  ],
+  "produits": [
+    {
+      "id": "P001",
+      "nom": "Poulet prêt à cuire 1,2 kg",
+      "categorie": "Volaille fraîche",
+      "prix": 4500
+    },
+    {
+      "id": "P002",
+      "nom": "Poulet découpé familial",
+      "categorie": "Volaille fraîche",
+      "prix": 6200
+    },
+    {
+      "id": "P003",
+      "nom": "Œufs plateau x30",
+      "categorie": "Œufs",
+      "prix": 3200
+    },
+    {
+      "id": "P004",
+      "nom": "Cuisses de poulet 1 kg",
+      "categorie": "Volaille fraîche",
+      "prix": 4800
+    },
+    {
+      "id": "P005",
+      "nom": "Poulet entier premium 1,5 kg",
+      "categorie": "Volaille premium",
+      "prix": 18000
+    },
+    {
+      "id": "P006",
+      "nom": "Ailes de poulet 1 kg",
+      "categorie": "Volaille fraîche",
+      "prix": 4100
+    }
+  ],
+  "scenario_demo": {
+    "prioritaire": {
+      "boutique_id": "B001",
+      "produit_id": "P005",
+      "description": "DABA Plateau — Poulet entier premium : stock 8, demande attendue ~35, déficit 27, RaR ~486 000 FCFA"
+    },
+    "source_reallocation": {
+      "boutique_id": "B002",
+      "produit_id": "P005",
+      "description": "DABA Cocody — surplus de stock premium"
+    }
+  },
+  "disclaimer": "Jeu de données 100 % synthétique destiné à la démonstration du MVP DabaPulse. Aucune donnée opérationnelle réelle de DABA SAS n'est incluse."
+}

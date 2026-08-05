@@ -150,7 +150,13 @@ runs/
 mlruns/
 wandb/
 checkpoints/
-models/
+# Ignore top-level ML model artifacts only — NOT backend/app/models (Pydantic schemas)
+/models/
+artifacts/
+# Explicitly keep backend API schemas tracked
+!backend/app/models/
+!backend/app/models/**
+
 artifacts/
 
 # Jupyter outputs

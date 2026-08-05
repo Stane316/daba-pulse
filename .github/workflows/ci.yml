@@ -5,11 +5,16 @@ on:
     branches:
       - main
       - develop
+      - "engineering-lead/**"
+      - "feature/**"
+      - "fix/**"
 
   pull_request:
     branches:
       - main
       - develop
+      - "engineering-lead/**"
+
 
   workflow_dispatch:
 
@@ -19,11 +24,6 @@ permissions:
 concurrency:
   group: dabapulse-ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
-
-# ============================================================
-# FRONTEND
-# ============================================================
 
 jobs:
 
@@ -49,21 +49,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run ESLint
+      - name: Run oxlint
         run: npm run lint
-        continue-on-error: false
 
       - name: Run TypeScript check
         run: npm run typecheck
-        continue-on-error: false
 
       - name: Build frontend
         run: npm run build
 
-
-# ============================================================
-# BACKEND
-# ============================================================
 
   backend:
     name: Backend — Tests & Quality
@@ -73,9 +67,13 @@ jobs:
       run:
         working-directory: backend
 
+    env:
+      DATA_PATH: ${{ github.workspace }}/data/sample
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -93,12 +91,11 @@ jobs:
         run: ruff check .
 
       - name: Run Pytest
-        run: pytest -q
+        run: |
+          echo "DATA_PATH=$DATA_PATH"
+          ls -la "$DATA_PATH" | head
+          pytest -q ../tests
 
-
-# ============================================================
-# SECURITY / REPOSITORY CHECKS
-# ============================================================
 
   security:
     name: Security — Secrets & Repository Checks
@@ -123,12 +120,11 @@ jobs:
             | grep -q .; then
 
             echo "❌ Environment file detected in repository."
-            echo "Do not commit secrets or environment-specific credentials."
+            
             exit 1
 
-          else
-            echo "✅ No forbidden environment files detected."
           fi
+          echo "✅ No forbidden environment files detected."
 
       - name: Check for private key files
         shell: bash
@@ -143,37 +139,32 @@ jobs:
             | grep -q .; then
 
             echo "❌ Private key or certificate file detected."
-            echo "Remove it from the repository."
+            
             exit 1
 
-          else
-            echo "✅ No private key files detected."
           fi
+          echo "✅ No private key files detected."
 
       - name: Verify .env.example exists
         shell: bash
         run: |
-          if [ ! -f ".env.example" ]; then
-            echo "❌ .env.example is missing."
-            exit 1
-          fi
-
+          
+          test -f ".env.example"
           echo "✅ .env.example detected."
 
       - name: Verify README exists
         shell: bash
         run: |
-          if [ ! -f "README.md" ]; then
-            echo "❌ README.md is missing."
-            exit 1
-          fi
 
+          test -f "README.md"
           echo "✅ README.md detected."
 
-
-# ============================================================
-# CI SUMMARY
-# ============================================================
+      - name: Verify backend models are tracked
+        shell: bash
+        run: |
+          test -f "backend/app/models/schemas.py"
+          test -f "backend/app/models/__init__.py"
+          echo "✅ backend/app/models tracked."
 
   ci-summary:
     name: DabaPulse CI — Summary
@@ -190,9 +181,9 @@ jobs:
       - name: Evaluate CI results
         shell: bash
         run: |
-          echo "Frontend status: ${{ needs.frontend.result }}"
-          echo "Backend status: ${{ needs.backend.result }}"
-          echo "Security status: ${{ needs.security.result }}"
+          echo "Frontend: ${{ needs.frontend.result }}"
+          echo "Backend: ${{ needs.backend.result }}"
+          echo "Security: ${{ needs.security.result }}"
 
           if [ "${{ needs.frontend.result }}" != "success" ] || \
              [ "${{ needs.backend.result }}" != "success" ] || \

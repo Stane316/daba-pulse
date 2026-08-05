@@ -1,0 +1,40 @@
+# DabaPulse API — Render Blueprint
+# https://render.com/docs/blueprint-spec
+#
+# After first deploy:
+# 1. Copy the service URL (https://….onrender.com)
+# 2. Set Netlify env VITE_API_URL to that URL (no trailing slash)
+# 3. Set this service CORS_ORIGINS to your Netlify URL(s)
+
+services:
+  - type: web
+    name: dabapulse-api
+    runtime: python
+    plan: free
+    region: frankfurt
+    rootDir: .
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: bash scripts/start-api.sh
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: DATA_PATH
+        # Render monorepo checkout path + sample dataset
+        value: /opt/render/project/src/data/sample
+      - key: CORS_ORIGINS
+        # Replace after Netlify site exists, e.g.:
+        # https://dabapulse.netlify.app,http://localhost:5173
+        value: "*"
+      - key: AI_ENABLED
+        value: "true"
+      - key: OPENAI_BASE_URL
+        value: https://openrouter.ai/api/v1
+      - key: OPENAI_MODEL
+        value: openai/gpt-4o-mini
+      - key: OPENAI_API_KEY
+        # Set in Render Dashboard → Environment (secret)
+        sync: false
+      - key: API_JSON_LOGS
+        value: "true"
