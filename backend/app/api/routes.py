@@ -311,3 +311,4 @@ def _ensure_data() -> None:
                 status_code=503,
                 detail=f"Données indisponibles: {exc}",
             ) from exc
+
