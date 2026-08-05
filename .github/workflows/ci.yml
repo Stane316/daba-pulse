@@ -91,7 +91,11 @@ jobs:
         run: ruff check .
 
       - name: Run Pytest
-        run: pytest -q ../tests
+        run: |
+          echo "DATA_PATH=$DATA_PATH"
+          ls -la "$DATA_PATH" | head
+          pytest -q ../tests
+
 
   security:
     name: Security — Secrets & Repository Checks
