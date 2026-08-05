@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+import json
+
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile
+from fastapi.responses import PlainTextResponse, Response
 
 from app import __version__
 from app.core.config import HYPOTHESES, get_settings
@@ -14,14 +17,19 @@ from app.engines.simulator import simulate
 from app.models.schemas import (
     AIExplainRequest,
     AIExplainResponse,
+    DataPreview,
     DataStatus,
     DecisionAction,
     ExecutiveSummary,
+    ExportRequest,
     HealthResponse,
     SimulationRequest,
     SimulationResult,
     SituationRisque,
+    UploadResult,
 )
+from app.services.csv_import import CsvValidationError, parse_ventes_csv
+from app.services.export_summary import build_decision_summary
 
 router = APIRouter()
 
@@ -53,6 +61,76 @@ def data_reload() -> DataStatus:
         return store.load()
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.get("/data/preview", response_model=DataPreview)
+def data_preview(n: int = Query(default=5, ge=1, le=50)) -> DataPreview:
+    _ensure_data()
+    preview = store.preview(n=n)
+    status = store.status()
+    return DataPreview(
+        **preview,
+        source=status.source,
+        type=status.type,
+        avertissements=status.avertissements,
+    )
+
+
+@router.post("/data/upload", response_model=UploadResult)
+async def data_upload(
+    file: UploadFile = File(..., description="CSV ventes/stocks"),
+) -> UploadResult:
+    """Import d'un CSV utilisateur (colonnes MVP obligatoires)."""
+    filename = file.filename or "upload.csv"
+    if not filename.lower().endswith(".csv"):
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "Le fichier doit être un CSV (.csv).",
+                "filename": filename,
+            },
+        )
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail={"message": "Fichier vide."})
+
+    # Charger d'abord le sample pour boutiques/produits/visibilité de référence
+    if not store.is_loaded:
+        try:
+            store.load()
+        except Exception:
+            pass
+
+    try:
+        df, warnings = parse_ventes_csv(content)
+    except CsvValidationError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail={"message": str(exc), **exc.details},
+        ) from exc
+
+    status = store.load_ventes_dataframe(
+        df,
+        source_label=f"upload:{filename}",
+        extra_warnings=warnings,
+        data_type="synthetiques",
+    )
+    preview = store.preview(n=5)
+    return UploadResult(
+        status=status,
+        preview=DataPreview(
+            **preview,
+            source=status.source,
+            type=status.type,
+            avertissements=status.avertissements,
+        ),
+        message=(
+            f"Import réussi : {status.nb_lignes} lignes, "
+            f"{status.nb_boutiques} boutiques, {status.nb_produits} produits. "
+            "Les moteurs vont recalculer sur ces données."
+        ),
+    )
 
 
 @router.get("/executive", response_model=ExecutiveSummary)
@@ -148,6 +226,59 @@ async def ai_explain_get(
         situation_id=situation_id,
         question=question,
         mode="qa" if question else "resume",
+    )
+
+
+@router.post("/export/decision")
+def export_decision_post(body: ExportRequest) -> Response:
+    """Export résumé décisionnel (JSON ou Markdown)."""
+    return _export_decision(body.situation_id, body.quantite, body.format)
+
+
+@router.get("/export/decision/{situation_id}")
+def export_decision_get(
+    situation_id: str,
+    quantite: float | None = None,
+    format: str = Query(default="json", pattern="^(json|markdown)$"),
+) -> Response:
+    return _export_decision(situation_id, quantite, format)  # type: ignore[arg-type]
+
+
+def _export_decision(
+    situation_id: str,
+    quantite: float | None,
+    fmt: str,
+) -> Response:
+    _ensure_data()
+    try:
+        result = build_decision_summary(
+            store,
+            situation_id,
+            quantite=quantite,
+            format=fmt if fmt in ("json", "markdown") else "json",  # type: ignore[arg-type]
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Situation introuvable") from exc
+
+    safe_id = situation_id.replace("/", "-")
+    if fmt == "markdown":
+        assert isinstance(result, str)
+        return PlainTextResponse(
+            content=result,
+            media_type="text/markdown; charset=utf-8",
+            headers={
+                "Content-Disposition": f'attachment; filename="dabapulse-decision-{safe_id}.md"'
+            },
+        )
+
+    assert isinstance(result, dict)
+    body = json.dumps(result, ensure_ascii=False, indent=2)
+    return Response(
+        content=body,
+        media_type="application/json; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="dabapulse-decision-{safe_id}.json"'
+        },
     )
 
 

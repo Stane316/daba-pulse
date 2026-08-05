@@ -1,1 +1,1 @@
-"""Services layer."""
+"""Services layer — export, import, orchestration légère."""

@@ -24,6 +24,8 @@ class DataStore:
         self.meta: dict[str, Any] = {}
         self.loaded_at: str | None = None
         self.warnings: list[str] = []
+        self._source_label: str = "aucune"
+        self._data_type: str = "synthetiques"
 
     @property
     def is_loaded(self) -> bool:
@@ -32,6 +34,8 @@ class DataStore:
     def load(self, data_path: str | Path | None = None) -> DataStatus:
         path = Path(data_path or get_settings().data_path)
         self.warnings = []
+        self._source_label = str(path)
+        self._data_type = "synthetiques"
 
         ventes_file = path / "ventes_stocks.csv"
         if not ventes_file.exists():
@@ -78,8 +82,78 @@ class DataStore:
             self.meta = json.load(f)
 
         self.loaded_at = datetime.utcnow().isoformat() + "Z"
+        self._rebuild_refs_from_ventes()
 
         return self.status()
+
+    def load_ventes_dataframe(
+        self,
+        df: pd.DataFrame,
+        *,
+        source_label: str = "upload.csv",
+        extra_warnings: list[str] | None = None,
+        data_type: str = "synthetiques",
+    ) -> DataStatus:
+        """Charge un dataframe ventes déjà validé (import utilisateur)."""
+        self.warnings = list(extra_warnings or [])
+        self._source_label = source_label
+        self._data_type = data_type  # type: ignore[assignment]
+        self.ventes = df.sort_values("date").copy()
+        self.loaded_at = datetime.utcnow().isoformat() + "Z"
+        self._rebuild_refs_from_ventes()
+        # conserver visibilité / meta si déjà chargés ; sinon defaults synthétiques
+        if not self.visibilite:
+            self.visibilite = {
+                "date_reference": str(self.ventes["date"].max().date()),
+                "recherche_google_jour": 15,
+                "note_avis_google": 2.5,
+                "nb_avis_google": 3,
+                "engagement_reseaux": 0.008,
+                "visiteurs_jour": 1200,
+                "taux_conversion_global": 0.015,
+                "prix_moyen": float(self.ventes["prix_unitaire"].mean()),
+                "source": "synthetique_default",
+            }
+        if not self.meta:
+            self.meta = {
+                "type": data_type,
+                "source": source_label,
+                "disclaimer": "Données importées — vérifier la nature synthétique/réelle.",
+            }
+        return self.status()
+
+    def _rebuild_refs_from_ventes(self) -> None:
+        """Met à jour boutiques/produits minimaux à partir des ventes."""
+        if self.ventes.empty:
+            return
+        for bid in self.ventes["boutique_id"].unique():
+            bid_s = str(bid)
+            if bid_s not in self.boutiques:
+                self.boutiques[bid_s] = {
+                    "id": bid_s,
+                    "nom": bid_s,
+                    "ville": "—",
+                    "zone": "—",
+                }
+        for pid in self.ventes["produit_id"].unique():
+            pid_s = str(pid)
+            if pid_s not in self.produits:
+                prix = float(
+                    self.ventes.loc[self.ventes["produit_id"] == pid, "prix_unitaire"].iloc[-1]
+                )
+                self.produits[pid_s] = {
+                    "id": pid_s,
+                    "nom": pid_s,
+                    "categorie": "import",
+                    "prix": prix,
+                }
+
+    def preview(self, n: int = 5) -> dict[str, Any]:
+        from app.services.csv_import import dataframe_preview
+
+        if self.ventes.empty:
+            return dataframe_preview(pd.DataFrame(), n=n)
+        return dataframe_preview(self.ventes, n=n)
 
     def status(self) -> DataStatus:
         if self.ventes.empty:
@@ -96,20 +170,25 @@ class DataStore:
                 avertissements=["Aucune donnée chargée"],
             )
 
+        data_type = getattr(self, "_data_type", "synthetiques")
+        source = getattr(self, "_source_label", str(get_settings().data_path))
+        base_warnings = list(self.warnings)
+        if data_type == "synthetiques":
+            base_warnings = base_warnings + [
+                "Données synthétiques — ne pas présenter comme données réelles DABA."
+            ]
+
         return DataStatus(
-            source=str(get_settings().data_path),
-            type="synthetiques",
+            source=source,
+            type=data_type,  # type: ignore[arg-type]
             nb_lignes=len(self.ventes),
-            nb_boutiques=self.ventes["boutique_id"].nunique(),
-            nb_produits=self.ventes["produit_id"].nunique(),
+            nb_boutiques=int(self.ventes["boutique_id"].nunique()),
+            nb_produits=int(self.ventes["produit_id"].nunique()),
             periode_debut=str(self.ventes["date"].min().date()),
             periode_fin=str(self.ventes["date"].max().date()),
             charge_le=self.loaded_at or "",
             valide=True,
-            avertissements=self.warnings
-            + [
-                "Données synthétiques — ne pas présenter comme données réelles DABA."
-            ],
+            avertissements=base_warnings,
         )
 
     def latest_snapshot(self) -> pd.DataFrame:

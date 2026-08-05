@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ReallocationFlow } from '../components/FlowDiagram'
 import {
   ConfidenceBadge,
   ErrorBanner,
+  GhostButton,
   LoadingScreen,
   MetricBlock,
   Panel,
@@ -11,11 +13,14 @@ import {
   ScopeTag,
 } from '../components/ui'
 import { usePulse } from '../context/PulseContext'
+import { api } from '../lib/api'
 import { formatFCFA, formatNumber } from '../lib/format'
 
 export function DecisionScreen() {
-  const { loading, error, selected, decision, reload } = usePulse()
+  const { loading, error, selected, decision, simQuantity, reload } = usePulse()
   const navigate = useNavigate()
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
 
   if (loading) return <LoadingScreen />
   if (error) return <ErrorBanner message={error} onRetry={() => void reload()} />
@@ -29,6 +34,21 @@ export function DecisionScreen() {
 
   const d = decision
   const isDist = d.scope === 'distribution'
+
+  const handleExport = async (format: 'markdown' | 'json') => {
+    setExporting(true)
+    setExportError(null)
+    try {
+      await api.downloadExport(selected.id, {
+        format,
+        quantite: simQuantity ?? d.quantite ?? undefined,
+      })
+    } catch (e) {
+      setExportError(e instanceof Error ? e.message : 'Export impossible')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   return (
     <div>
@@ -183,11 +203,26 @@ export function DecisionScreen() {
         </Panel>
       )}
 
-      <div className="mt-8 flex justify-end">
+      <div className="mt-8 flex flex-wrap items-center justify-end gap-3">
+        <GhostButton
+          disabled={exporting}
+          onClick={() => void handleExport('markdown')}
+        >
+          {exporting ? 'Export…' : 'Exporter résumé (.md)'}
+        </GhostButton>
+        <GhostButton
+          disabled={exporting}
+          onClick={() => void handleExport('json')}
+        >
+          Exporter JSON
+        </GhostButton>
         <PrimaryButton onClick={() => navigate('/simulation')}>
           Simuler l'impact
         </PrimaryButton>
       </div>
+      {exportError && (
+        <p className="mt-3 text-right text-xs text-risk-soft">{exportError}</p>
+      )}
     </div>
   )
 }

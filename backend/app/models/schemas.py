@@ -6,7 +6,6 @@ from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field
 
-
 RiskType = Literal[
     "rupture_stock",
     "surstock",
@@ -178,3 +177,28 @@ class HealthResponse(BaseModel):
     version: str
     ai_available: bool
     data_loaded: bool
+
+
+class DataPreview(BaseModel):
+    columns: list[str]
+    sample_rows: list[dict[str, Any]]
+    nb_lignes: int
+    nb_boutiques: int
+    nb_produits: int
+    periode_debut: str | None = None
+    periode_fin: str | None = None
+    source: str | None = None
+    type: Literal["synthetiques", "reelles"] | None = None
+    avertissements: list[str] = []
+
+
+class ExportRequest(BaseModel):
+    situation_id: str
+    quantite: float | None = None
+    format: Literal["json", "markdown"] = "json"
+
+
+class UploadResult(BaseModel):
+    status: DataStatus
+    preview: DataPreview
+    message: str
