@@ -7,9 +7,6 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# ---------------------------------------------------------------------------
-# Hypothèses de calcul — versionnées et explicites
-# ---------------------------------------------------------------------------
 HYPOTHESES = {
     "version": "1.0.0",
     "horizon_jours": 7,
@@ -50,22 +47,23 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     cors_origins: str = "*"
-    data_path: str = str(
-        Path(__file__).resolve().parents[3] / "data" / "sample"
-    )
+    data_path: str = str(Path(__file__).resolve().parents[3] / "data" / "sample")
+    api_json_logs: bool = False
 
     openai_api_key: str = ""
-    openai_base_url: str = "https://api.openai.com/v1"
-    openai_model: str = "gpt-4o-mini"
+    openai_base_url: str = "https://openrouter.ai/api/v1"
+    openai_model: str = "openai/gpt-4o-mini"
     ai_enabled: bool = True
 
     @property
     def origins(self) -> list[str]:
-        if self.cors_origins.strip() == "*":
+        raw = self.cors_origins.strip()
+        if raw == "*":
             return ["*"]
-        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+        return [o.strip() for o in raw.split(",") if o.strip()]
 
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
