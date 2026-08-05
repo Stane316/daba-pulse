@@ -1,0 +1,18 @@
+{
+  "name": "daba-pulse",
+  "private": true,
+  "version": "0.1.0",
+  "description": "DabaPulse monorepo — frontend lives in /frontend, backend in /backend",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev -- --host 0.0.0.0 --port 5173",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "typecheck": "npm --prefix frontend run typecheck",
+    "preview": "npm --prefix frontend run preview",
+    "install:frontend": "npm --prefix frontend ci"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
+

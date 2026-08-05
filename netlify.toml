@@ -19,9 +19,9 @@
   to = "/index.html"
   status = 200
 
-# Optional: preview context still uses production build command
 [context.deploy-preview]
   command = "npm install && npm run build"
 
 [context.branch-deploy]
   command = "npm install && npm run build"
+

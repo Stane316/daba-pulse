@@ -92,6 +92,11 @@ Le prompt doit afficher `(.venv)`.
 
 ## A4. Frontend — dépendances Node
 
+> ⚠️ Le `package.json` du front est dans le dossier **`frontend/`**,  
+> **pas** à la racine `daba-pulse\`.  
+> Si vous lancez `npm install` / `npm run build` à la racine **sans** le  
+> `package.json` racine (scripts proxy), vous aurez `ENOENT package.json`.
+
 ```powershell
 cd C:\Users\HP\Downloads\daba-pulse\frontend
 npm ci
@@ -101,6 +106,16 @@ Si `npm ci` échoue :
 
 ```powershell
 npm install
+```
+
+### Alternative depuis la racine du monorepo
+
+Un `package.json` racine relaie les scripts vers `frontend/` :
+
+```powershell
+cd C:\Users\HP\Downloads\daba-pulse
+npm run install:frontend
+# équivalent : npm --prefix frontend ci
 ```
 
 ---
@@ -221,6 +236,13 @@ cd C:\Users\HP\Downloads\daba-pulse\frontend
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
+Depuis la **racine** (si `package.json` racine présent) :
+
+```powershell
+cd C:\Users\HP\Downloads\daba-pulse
+npm run dev
+```
+
 Succès attendu :
 
 ```text
@@ -264,7 +286,8 @@ Dans chaque terminal : `Ctrl + C`.
 |--------|----------|
 | Activer le venv | `.\.venv\Scripts\Activate.ps1` |
 | Tests backend | `cd backend ; python -m pytest -q ..\tests` |
-| Build frontend | `cd frontend ; npm run build` |
+| Build frontend | `cd frontend ; npm run build` (ou racine : `npm run build`) |
+| Lint frontend | `cd frontend ; npm run lint` (ou racine : `npm run lint`) |
 | Recharger données sample (API allumée) | `Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/data/reload` |
 | Export démo JSON | navigateur → Décision → Exporter JSON  
 | ou | `Invoke-WebRequest "http://127.0.0.1:8000/api/export/decision/dist-B001-P005?format=markdown" -OutFile "$env:USERPROFILE\Downloads\dabapulse.md"` |
@@ -304,8 +327,11 @@ cd frontend && npm run dev -- --host 0.0.0.0 --port 5173
 | `No module named app.models` | Pull dernière branche ; vérifier `backend/app/models/schemas.py` |
 | Port 8000 occupé | Fermer l’ancien uvicorn ou changer de port |
 | Front ne joint pas l’API | API allumée sur 8000 ; `VITE_API_URL` vide en local |
+| `npm ERR! ENOENT … daba-pulse\package.json` | Vous êtes à la **racine** sans utiliser les scripts proxy : `cd frontend` puis `npm install` / `npm run build`, **ou** `npm run build` à la racine si le `package.json` monorepo est présent |
 | Warning CRLF Git | Normal une fois sous Windows ; voir `.gitattributes` |
 | IA “indisponible” | Normal sans `OPENAI_API_KEY` — fallback actif |
+| `npm ERR! ENOENT package.json` à la racine | `cd frontend` avant npm, ou `npm run build` via package.json monorepo |
+
 
 ---
 
