@@ -214,3 +214,4 @@ def _fcfa(value: Any) -> str:
         return f"{float(value):,.0f} FCFA".replace(",", " ")
     except (TypeError, ValueError):
         return str(value)
+

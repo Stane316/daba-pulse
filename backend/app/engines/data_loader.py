@@ -219,4 +219,3 @@ class DataStore:
 
 # Singleton
 store = DataStore()
-
