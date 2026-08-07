@@ -1355,11 +1355,11 @@ Le code reste la source de vérité pour le comportement réellement implément�
 
 **Status: Déployé — Production ready (hackathon)**
 
-**Live :** Frontend `https://dabapulse.netlify.app` (Netlify, `engineering-lead/mvp-foundation` → `main@cb51cea`) + API `https://dabapulse-api.onrender.com` (Render, `region frankfurt`, `health /api/health` vert) — vérifié `bash scripts/smoke.sh https://dabapulse-api.onrender.com` **14 PASS** le 2026-08-07 (`B001×P005` 486 000 FCFA → simulate 486k protégé).
+**Live :** Frontend `https://dabapulse.netlify.app` (Netlify, `engineering-lead/mvp-foundation` → `main@13a57a5` + `EL 5a32ce8` HorizonX) + API `https://dabapulse-api.onrender.com` (Render, `region frankfurt`, `health /api/health` vert) — vérifié `bash scripts/smoke.sh https://dabapulse-api.onrender.com` **14 PASS** le 2026-08-07 (`B001×P005` 486 000 FCFA → simulate 486k protégé) — **Light/Dark** `Sun/Moon` + `count-up` + `parallax` + `27 particules` + `tunnel` opérationnels.
 
-**CI :** `DabaPulse CI` verte (frontend `oxlint`/`typecheck`/`build 662→241kB` code-split, backend `ruff`/`pip-audit clean`/`pytest 18`, `security` `starlette 1.3.1`).
+**CI :** `DabaPulse CI` verte (frontend `oxlint`/`typecheck`/`build 30.76kB + react 216kB + charts 386kB` code-split, backend `ruff`/`pip-audit clean`/`pytest 18`, `security` `starlette 1.3.1`).
 
-**Vérifié prod :** `CORS https://dabapulse.netlify.app` (plus `Failed to fetch`), `VITE_API_URL` injecté au build, `Failed to fetch` résolu par retry 900ms.
+**Vérifié prod :** `CORS https://dabapulse.netlify.app` (plus `Failed to fetch`), `VITE_API_URL` injecté au build, `Failed to fetch` résolu par retry 900ms, `prefers-reduced-motion` + `a11y` skip-link + 5 micro-illustrations 24px.
 
 ### Current phase
 

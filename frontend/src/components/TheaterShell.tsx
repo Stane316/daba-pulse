@@ -175,7 +175,7 @@ export function TheaterShell({ children }: { children: ReactNode }) {
       </header>
 
       {/* Main stage */}
-      <main className="mx-auto max-w-[1400px] px-5 py-8 md:px-8 md:py-10">
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-[1400px] px-5 py-8 outline-none md:px-8 md:py-10">
         {children}
       </main>
 

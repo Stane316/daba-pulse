@@ -1,4 +1,5 @@
 import { Panel, SceneQuestion } from '../components/ui'
+import { ECO_ICONS } from '../components/MicroIllustrations'
 
 const PHASES = [
   {
@@ -171,23 +172,41 @@ export function HorizonScreen() {
         <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-charcoal to-transparent" />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-charcoal to-transparent" />
         <div className="flex w-max animate-[tunnel_18s_linear_infinite] gap-3 hover:[animation-play-state:paused]">
-          {[...ECOSYSTEM, ...ECOSYSTEM].map((e, i) => (
-            <div key={`${e.name}-${i}`} className="flex h-[92px] w-[260px] shrink-0 flex-col justify-center rounded-xl border border-white/8 bg-charcoal-deep/60 px-4">
-              <div className="text-sm font-semibold text-sand">{e.name}</div>
-              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-bone-dim">{e.desc}</p>
-            </div>
-          ))}
+          {[...ECOSYSTEM, ...ECOSYSTEM].map((e, i) => {
+            const Icon = ECO_ICONS[e.name]
+            return (
+              <div key={`${e.name}-${i}`} className="flex h-[92px] w-[260px] shrink-0 items-center gap-3 rounded-xl border border-white/8 bg-charcoal-deep/60 px-4">
+                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/5 bg-charcoal text-amber">
+                  {Icon ? <Icon className="h-5 w-5" /> : null}
+                </span>
+                <div>
+                  <div className="text-sm font-semibold text-sand">{e.name}</div>
+                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-bone-dim">{e.desc}</p>
+                </div>
+              </div>
+            )
+          })}
         </div>
         <style>{`@keyframes tunnel { 0% { transform: translateX(0) } 100% { transform: translateX(-50%) } } @media (prefers-reduced-motion: reduce) { .animate-\\[tunnel_18s_linear_infinite\\] { animation: none !important } }`}</style>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {ECOSYSTEM.map((e, i) => (
-          <Panel key={e.name} delay={Math.min(i + 1, 5)} className="!p-4">
-            <div className="text-sm font-semibold text-sand">{e.name}</div>
-            <p className="mt-2 text-xs leading-relaxed text-bone-dim">{e.desc}</p>
-          </Panel>
-        ))}
+        {ECOSYSTEM.map((e, i) => {
+          const Icon = ECO_ICONS[e.name]
+          return (
+            <Panel key={e.name} delay={Math.min(i + 1, 5)} className="!p-4">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-charcoal-deep/60 text-amber">
+                  {Icon ? <Icon className="h-5 w-5" /> : null}
+                </span>
+                <div>
+                  <div className="text-sm font-semibold text-sand">{e.name}</div>
+                  <p className="mt-1 text-xs leading-relaxed text-bone-dim">{e.desc}</p>
+                </div>
+              </div>
+            </Panel>
+          )
+        })}
       </div>
 
       <section className="animate-fade-up delay-3 mt-12 rounded-3xl border border-white/5 bg-charcoal/60 p-8 text-center md:p-12">

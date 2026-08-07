@@ -209,8 +209,8 @@ export function GhostButton({
 
 export function LoadingScreen() {
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-      <div className="h-10 w-10 animate-spin rounded-full border-2 border-amber/30 border-t-amber" />
+    <div role="status" aria-live="polite" aria-busy="true" className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-amber/30 border-t-amber" aria-hidden />
       <p className="text-sm text-mineral">Analyse des signaux en cours…</p>
     </div>
   )
