@@ -467,46 +467,46 @@ Le MVP doit permettre :
 
 ### Analyse
 
-* [ ] Analyser ventes et stocks
-* [ ] Détecter les ruptures potentielles
-* [ ] Détecter les situations de surstock
-* [ ] Détecter les demandes fortes ou croissantes
-* [ ] Identifier les désalignements
+* [x] Analyser ventes et stocks
+* [x] Détecter les ruptures potentielles
+* [x] Détecter les situations de surstock
+* [x] Détecter les demandes fortes ou croissantes
+* [x] Identifier les désalignements
 
 ### Revenue-at-Risk
 
-* [ ] Calculer le revenu exposé
-* [ ] Afficher les hypothèses
-* [ ] Associer un niveau de confiance
-* [ ] Prioriser les situations
+* [x] Calculer le revenu exposé
+* [x] Afficher les hypothèses
+* [x] Associer un niveau de confiance
+* [x] Prioriser les situations
 
 ### Décision
 
-* [ ] Recommander une action
-* [ ] Identifier le produit
-* [ ] Identifier le point de vente
-* [ ] Déterminer une quantité
-* [ ] Expliquer la priorité
-* [ ] Proposer éventuellement une alternative
+* [x] Recommander une action
+* [x] Identifier le produit
+* [x] Identifier le point de vente
+* [x] Déterminer une quantité
+* [x] Expliquer la priorité
+* [x] Proposer éventuellement une alternative
 
 ### Simulation
 
-* [ ] Modifier une quantité
-* [ ] Tester un scénario
-* [ ] Comparer avant / après
-* [ ] Mesurer la variation du risque
-* [ ] Estimer le revenu potentiellement protégé
+* [x] Modifier une quantité
+* [x] Tester un scénario
+* [x] Comparer avant / après
+* [x] Mesurer la variation du risque
+* [x] Estimer le revenu potentiellement protégé
 
 ### IA
 
-* [ ] Expliquer une recommandation
-* [ ] Répondre aux questions sur les résultats
-* [ ] Comparer des scénarios
-* [ ] Générer un résumé décisionnel
+* [x] Expliquer une recommandation
+* [x] Répondre aux questions sur les résultats
+* [x] Comparer des scénarios
+* [x] Générer un résumé décisionnel
 
 ### Export
 
-* [ ] Exporter un résumé décisionnel lorsque disponible
+* [x] Exporter un résumé décisionnel lorsque disponible
 
 ---
 
@@ -1353,18 +1353,24 @@ Le code reste la source de vérité pour le comportement réellement implément�
 
 # 23. Statut du projet
 
-**Status: In active development**
+**Status: Déployé — Production ready (hackathon)**
+
+**Live :** Frontend `https://dabapulse.netlify.app` (Netlify, `engineering-lead/mvp-foundation` → `main@cb51cea`) + API `https://dabapulse-api.onrender.com` (Render, `region frankfurt`, `health /api/health` vert) — vérifié `bash scripts/smoke.sh https://dabapulse-api.onrender.com` **14 PASS** le 2026-08-07 (`B001×P005` 486 000 FCFA → simulate 486k protégé).
+
+**CI :** `DabaPulse CI` verte (frontend `oxlint`/`typecheck`/`build 662→241kB` code-split, backend `ruff`/`pip-audit clean`/`pytest 18`, `security` `starlette 1.3.1`).
+
+**Vérifié prod :** `CORS https://dabapulse.netlify.app` (plus `Failed to fetch`), `VITE_API_URL` injecté au build, `Failed to fetch` résolu par retry 900ms.
 
 ### Current phase
 
 ```text
-Architecture
+Architecture ✓
     ↓
-Implementation
+Implementation ✓ (INC-01→06)
     ↓
-Validation
+Validation ✓ (CI verte + smoke prod)
     ↓
-Demonstration
+Demonstration → prochaine (PR groupée EL→main)
     ↓
 Submission
 ```
