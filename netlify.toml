@@ -1,9 +1,9 @@
 # DabaPulse Frontend — Netlify
 # https://docs.netlify.com/configure-builds/file-based-configuration/
 #
-# Required env var in Netlify UI (after Render API is live):
-#   VITE_API_URL = https://<your-api>.onrender.com
-#   (no trailing slash)
+# Variable d'environnement obligatoire en production (Netlify UI) :
+#   VITE_API_URL = https://<ton-api>.onrender.com  (sans / final)
+# En local, laisser vide : Vite proxy /api → http://127.0.0.1:8000
 
 [build]
   base = "frontend"
@@ -13,12 +13,29 @@
 [build.environment]
   NODE_VERSION = "20"
 
-# SPA fallback — React Router client routes
+# SPA fallback — React Router client routes (toutes les routes → index.html)
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
+# Sécurité — headers HTTP de base
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    X-XSS-Protection = "1; mode=block"
+
+# Cache agressif pour les assets versionnés par Vite (hash dans le nom)
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Preview / branch deploys : même build, pas de variable différente
 [context.deploy-preview]
   command = "npm ci && npm run build"
 
