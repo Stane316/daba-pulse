@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { TheaterShell } from './components/TheaterShell'
 import { LoadingScreen } from './components/ui'
 import { PulseProvider } from './context/PulseContext'
+import { ThemeProvider } from './context/ThemeContext'
 import { SituationScreen } from './screens/SituationScreen'
 
 // Lazy — les 5 scènes secondaires ne sont chargées qu'à la navigation
@@ -25,22 +26,24 @@ const HorizonScreen = lazy(() =>
 
 export default function App() {
   return (
-    <PulseProvider>
-      <BrowserRouter>
-        <TheaterShell>
-          <Suspense fallback={<LoadingScreen />}>
-            <Routes>
-              <Route path="/" element={<SituationScreen />} />
-              <Route path="/investigation" element={<InvestigationScreen />} />
-              <Route path="/decision" element={<DecisionScreen />} />
-              <Route path="/simulation" element={<SimulationScreen />} />
-              <Route path="/explication" element={<ExplanationScreen />} />
-              <Route path="/horizon" element={<HorizonScreen />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-        </TheaterShell>
-      </BrowserRouter>
-    </PulseProvider>
+    <ThemeProvider>
+      <PulseProvider>
+        <BrowserRouter>
+          <TheaterShell>
+            <Suspense fallback={<LoadingScreen />}>
+              <Routes>
+                <Route path="/" element={<SituationScreen />} />
+                <Route path="/investigation" element={<InvestigationScreen />} />
+                <Route path="/decision" element={<DecisionScreen />} />
+                <Route path="/simulation" element={<SimulationScreen />} />
+                <Route path="/explication" element={<ExplanationScreen />} />
+                <Route path="/horizon" element={<HorizonScreen />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          </TheaterShell>
+        </BrowserRouter>
+      </PulseProvider>
+    </ThemeProvider>
   )
 }

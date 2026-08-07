@@ -1,15 +1,17 @@
-import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Moon, Sun } from 'lucide-react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { SCENES } from '../lib/scenes'
 import { cn, SyntheticBadge } from './ui'
 import { usePulse } from '../context/PulseContext'
+import { useTheme } from '../context/ThemeContext'
 import { formatFCFA } from '../lib/format'
 
 export function TheaterShell({ children }: { children: ReactNode }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { summary, selected } = usePulse()
+  const { theme, toggle } = useTheme()
 
   const currentIndex = Math.max(
     0,
@@ -97,6 +99,15 @@ export function TheaterShell({ children }: { children: ReactNode }) {
             </div>
             <div className="hidden h-6 w-px bg-white/10 sm:block" />
             <SyntheticBadge />
+            <button
+              type="button"
+              onClick={toggle}
+              aria-label={theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
+              title={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-mineral transition hover:border-amber/30 hover:bg-white/10 hover:text-bone"
+            >
+              {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
           </div>
 
           <div className="hidden items-center gap-6 md:flex">
