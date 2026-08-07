@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePulse } from '../context/PulseContext'
+import { useCountUp, usePrefersReducedMotion } from '../lib/motion'
 import {
   ConfidenceBadge,
   ErrorBanner,
@@ -25,6 +26,11 @@ export function SituationScreen() {
   const [uploading, setUploading] = useState(false)
   const [uploadMsg, setUploadMsg] = useState<string | null>(null)
   const [uploadErr, setUploadErr] = useState<string | null>(null)
+  // Hooks must be unconditional (before early returns) — HorizonX motion
+  const reducedMotion = usePrefersReducedMotion()
+  const animatedRaR = useCountUp(summary?.revenue_at_risk_total ?? 0, {
+    enabled: !reducedMotion && !loading && !!summary,
+  })
 
   if (loading) return <LoadingScreen />
   if (error || !summary)
@@ -67,9 +73,9 @@ export function SituationScreen() {
           </div>
           <div
             className="num mt-3 font-display text-[clamp(2.8rem,8vw,5rem)] leading-none text-risk-soft"
-            style={{ animation: 'count-glow 3s ease-in-out infinite' }}
+            style={{ animation: reducedMotion ? undefined : 'count-glow 3s ease-in-out infinite' }}
           >
-            {formatNumber(summary.revenue_at_risk_total)}
+            {formatNumber(animatedRaR)}
           </div>
           <div className="mt-2 text-lg text-bone-dim">FCFA exposés</div>
 
