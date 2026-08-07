@@ -62,39 +62,43 @@ export function InvestigationScreen() {
         </span>
       </div>
 
-      {/* SIGNAL → CAUSE → RISQUE → IMPACT */}
-      <div className="mb-8 grid gap-3 md:grid-cols-4">
-        {[
-          { k: 'Signal', v: riskTypeLabel(s.type_risque) },
-          {
-            k: 'Cause',
-            v: isDist
-              ? `Stock ${formatNumber(s.stock_disponible)} < Demande ${formatNumber(s.demande_attendue)}`
-              : s.signal.slice(0, 48) + '…',
-          },
-          {
-            k: 'Risque',
-            v: isDist
-              ? `Déficit ${formatNumber(s.deficit_potentiel)} u.`
-              : 'Visibilité / confiance',
-          },
-          {
-            k: 'Impact',
-            v: formatFCFA(s.revenue_at_risk, true),
-          },
-        ].map((step, i) => (
-          <div
-            key={step.k}
-            className={`animate-fade-up rounded-xl border border-white/5 bg-charcoal/60 p-4 delay-${i + 1}`}
-          >
-            <div className="text-[10px] uppercase tracking-[0.2em] text-amber">
-              {step.k}
+      {/* Timeline SIGNAL → CAUSE → RISQUE → IMPACT — sticky pin (HorizonX NOLITH 5 chapitres adapté) */}
+      <div className="sticky top-[57px] z-20 -mx-5 md:-mx-8 mb-8 border-y border-white/5 bg-charcoal-deep/90 px-5 py-4 backdrop-blur-md md:px-8">
+        <div className="relative flex items-start justify-between gap-2">
+          {/* Ligne de progression */}
+          <div className="absolute left-[14%] right-[14%] top-[18px] h-[2px] bg-white/10 md:left-[16%] md:right-[16%]" />
+          <div className="absolute left-[14%] right-[14%] top-[18px] h-[2px] bg-gradient-to-r from-amber via-amber to-sage opacity-60 md:left-[16%] md:right-[16%]" />
+          {[
+            { k: 'Signal', v: riskTypeLabel(s.type_risque), n: '01' },
+            {
+              k: 'Cause',
+              v: isDist
+                ? `Stock ${formatNumber(s.stock_disponible)} < Demande ${formatNumber(s.demande_attendue)}`
+                : s.signal.slice(0, 32) + '…',
+              n: '02',
+            },
+            {
+              k: 'Risque',
+              v: isDist
+                ? `Déficit ${formatNumber(s.deficit_potentiel)} u.`
+                : 'Visibilité / confiance',
+              n: '03',
+            },
+            {
+              k: 'Impact',
+              v: formatFCFA(s.revenue_at_risk, true),
+              n: '04',
+            },
+          ].map((step, i) => (
+            <div key={step.k} className="relative flex flex-1 flex-col items-center text-center">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber text-xs font-bold text-charcoal shadow-[0_0_0_4px_rgba(201,150,58,0.15)]">
+                {step.n}
+              </div>
+              <div className="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber">{step.k}</div>
+              <div className="mt-1 max-w-[140px] text-xs font-medium leading-snug text-bone md:text-sm">{step.v}</div>
             </div>
-            <div className="mt-2 text-sm font-medium leading-snug text-bone">
-              {step.v}
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
