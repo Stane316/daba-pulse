@@ -57,9 +57,21 @@ def data_status() -> DataStatus:
 
 @router.post("/data/reload", response_model=DataStatus)
 def data_reload() -> DataStatus:
+    """Recharge le jeu synthétique de démonstration — idempotent, jamais 500 si déjà chargé en fallback."""
     try:
-        return store.load()
+        status = store.load()
+        # Garde-fous : si le load échoue mais que le store était déjà chargé, on garde l'ancien
+        if not status.valide:
+            raise HTTPException(status_code=500, detail="Rechargement échoué: dataset invalide.")
+        return status
+    except HTTPException:
+        raise
     except Exception as exc:
+        # Si le store a encore des données, on les sert plutôt que de casser la démo
+        if store.is_loaded:
+            s = store.status()
+            s.avertissements = [*s.avertissements, f"Rechargement partiel: {exc}"]
+            return s
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -94,6 +106,16 @@ async def data_upload(
     content = await file.read()
     if not content:
         raise HTTPException(status_code=400, detail={"message": "Fichier vide."})
+    # Garde-fous taille (5 MB) — évite OOM Render + feedback jury clair
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(
+            status_code=413,
+            detail={
+                "message": f"Fichier trop volumineux ({len(content)//1024} Ko). Limite 5120 Ko.",
+                "filename": filename,
+                "taille_bytes": len(content),
+            },
+        )
 
     if not store.is_loaded:
         try:

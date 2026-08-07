@@ -41,6 +41,22 @@ export function SituationScreen() {
 
   const onFile = async (file: File | null) => {
     if (!file) return
+    // Garde-fous jury : validation client avant réseau (évite bruit inutile)
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      setUploadErr('Le fichier doit être un CSV (.csv)')
+      if (fileRef.current) fileRef.current.value = ''
+      return
+    }
+    if (file.size === 0) {
+      setUploadErr('Fichier vide')
+      if (fileRef.current) fileRef.current.value = ''
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadErr(`Fichier trop volumineux (${(file.size/1024).toFixed(0)} Ko). Limite 5120 Ko.`)
+      if (fileRef.current) fileRef.current.value = ''
+      return
+    }
     setUploading(true)
     setUploadErr(null)
     setUploadMsg(null)
@@ -49,7 +65,15 @@ export function SituationScreen() {
       setUploadMsg(res.message)
       await reload()
     } catch (e) {
-      setUploadErr(e instanceof Error ? e.message : 'Import impossible')
+      const raw = e instanceof Error ? e.message : 'Import impossible'
+      // Extrait le detail FastAPI {message, missing_columns, ...} pour message clair
+      let friendly = raw
+      try {
+        const j = JSON.parse(raw)
+        if (j.message) friendly = j.message
+        if (j.missing_columns) friendly += ` — manquantes: ${j.missing_columns.join(', ')}`
+      } catch { /* raw déjà lisible */ }
+      setUploadErr(friendly)
     } finally {
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ''

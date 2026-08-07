@@ -41,7 +41,7 @@ export function PulseProvider({ children }: { children: ReactNode }) {
   const [simulation, setSimulation] = useState<SimulationResult | null>(null)
   const [simQuantity, setSimQuantityState] = useState<number | null>(null)
 
-  const loadAll = useCallback(async (preferId?: string | null) => {
+  const loadAll = useCallback(async (preferId?: string | null, retry = true) => {
     setLoading(true)
     setError(null)
     try {
@@ -72,7 +72,13 @@ export function PulseProvider({ children }: { children: ReactNode }) {
         setSimQuantityState(sim.quantite_simulee)
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur de chargement')
+      const msg = e instanceof Error ? e.message : 'Erreur de chargement'
+      // Retry une fois sur cold start Render (503/cold start ~50s) — évite le Failed to fetch jury
+      if (retry && (msg.includes('Failed to fetch') || msg.includes('503') || msg.includes('Délai dépassé'))) {
+        await new Promise((r) => setTimeout(r, 900))
+        return loadAll(preferId, false)
+      }
+      setError(msg)
     } finally {
       setLoading(false)
     }
