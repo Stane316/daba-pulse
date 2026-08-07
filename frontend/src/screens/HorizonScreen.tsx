@@ -166,6 +166,21 @@ export function HorizonScreen() {
         </p>
       </div>
 
+      {/* Gallery Tunnel infini — HorizonX Gallery Tunnel adapté (INC-14) */}
+      <div className="relative mb-8 overflow-hidden rounded-2xl border border-white/5 bg-charcoal/50 py-4">
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-charcoal to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-charcoal to-transparent" />
+        <div className="flex w-max animate-[tunnel_18s_linear_infinite] gap-3 hover:[animation-play-state:paused]">
+          {[...ECOSYSTEM, ...ECOSYSTEM].map((e, i) => (
+            <div key={`${e.name}-${i}`} className="flex h-[92px] w-[260px] shrink-0 flex-col justify-center rounded-xl border border-white/8 bg-charcoal-deep/60 px-4">
+              <div className="text-sm font-semibold text-sand">{e.name}</div>
+              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-bone-dim">{e.desc}</p>
+            </div>
+          ))}
+        </div>
+        <style>{`@keyframes tunnel { 0% { transform: translateX(0) } 100% { transform: translateX(-50%) } } @media (prefers-reduced-motion: reduce) { .animate-\\[tunnel_18s_linear_infinite\\] { animation: none !important } }`}</style>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {ECOSYSTEM.map((e, i) => (
           <Panel key={e.name} delay={Math.min(i + 1, 5)} className="!p-4">
