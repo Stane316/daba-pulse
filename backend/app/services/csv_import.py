@@ -27,14 +27,25 @@ class CsvValidationError(ValueError):
         self.details = details or {}
 
 
+MAX_CSV_BYTES = 5 * 1024 * 1024  # 5 MB — garde-fous démo (Render free tier)
+
+
 def parse_ventes_csv(content: bytes | str) -> tuple[pd.DataFrame, list[str]]:
     """Parse et valide un CSV ventes/stocks."""
     warnings: list[str] = []
+    # Garde-fous taille (évite OOM sur Render)
+    if isinstance(content, bytes) and len(content) > MAX_CSV_BYTES:
+        raise CsvValidationError(
+            f"Fichier trop volumineux ({len(content) // 1024} Ko). Limite {MAX_CSV_BYTES // 1024} Ko.",
+            {"nb_lignes": 0, "taille_bytes": len(content)},
+        )
     try:
         if isinstance(content, bytes):
             text = content.decode("utf-8-sig")
         else:
             text = content
+        if not text.strip():
+            raise CsvValidationError("Le fichier CSV est vide.", {"nb_lignes": 0})
         df = pd.read_csv(io.StringIO(text))
     except UnicodeDecodeError as exc:
         raise CsvValidationError(

@@ -1,74 +1,92 @@
-# Merge Engineering Lead → `main`
+# Merge Engineering Lead → `main` — PR groupée INC-04→06
 
-Procédure contrôlée pour intégrer le MVP DabaPulse dans `main`.
+Procédure contrôlée pour intégrer les incréments `HorizonX motion + perf + robustesse` dans `main`.
+
+> **État actuel (2026-08-07) :** `main@cb51cea` contient déjà INC-01/02/03 (CI verte, hardening sécu, deploy). `engineering-lead/mvp-foundation@000e395..` contient 3 commits d'avance :
+> - `a699d98 feat(ui): HorizonX-inspired motion and depth`
+> - `432ae8e perf(frontend): code-split 662→241kB`
+> - `000e395 fix(engineering): harden CSV import/export and reload`
+> Soit **10 fichiers, 287 insertions, 33 deletions** (`git diff main..EL --stat`).
 
 ## Prérequis (à vérifier AVANT merge)
 
-- [ ] Branche `engineering-lead/mvp-foundation` à jour sur GitHub
-- [ ] Commit sécurité présent (`package.json` racine, requirements hardenés, `SECURITY_NOTES.md`)
-- [ ] `pytest` vert (18+)
-- [ ] `npm run build` vert (depuis `frontend/` **ou** racine)
-- [ ] Aucun secret dans le dépôt
-- [ ] Working tree clean
+- [ ] Branche `engineering-lead/mvp-foundation` à jour sur GitHub (`a699d98`, `432ae8e`, `000e395` visibles)
+- [ ] `main` à jour (`cb51cea` Merge PR #6)
+- [ ] Commit sécurité présent (`SECURITY_NOTES.md` starlette 1.3.1, `dependabot.yml` block router 8.x)
+- [ ] `pytest` vert (18, `ruff` 0, `pip-audit` clean)
+- [ ] `npm run build` vert (après code-split : `index ~25kB + react ~217kB + charts ~386kB`, `oxlint` 0 errors)
+- [ ] Prod vérifiée : `https://dabapulse-api.onrender.com/api/health` 200, `https://dabapulse.netlify.app` sans `Failed to fetch`, `bash scripts/smoke.sh https://dabapulse-api.onrender.com` 14 PASS, `CORS https://dabapulse.netlify.app`
+- [ ] Aucun secret dans `git diff main..EL`
+- [ ] Working tree clean (`git status`)
 
 ### Vérifs rapides (PowerShell)
 
 ```powershell
-cd C:\Users\HP\Downloads\daba-pulse
 git fetch origin
 git checkout engineering-lead/mvp-foundation
 git pull origin engineering-lead/mvp-foundation
-git status
-git log -3 --oneline
-
-# Contenu sécurité
-git show HEAD:package.json | Select-Object -First 5
-git show HEAD:backend/requirements.txt
-git show HEAD:backend/app/main.py | Select-String "Erreur interne"
-
+git log --oneline -n 5  # doit afficher a699d98, 432ae8e, 000e395
+git diff origin/main --stat  # 10 files
 # Tests
-.\.venv\Scripts\Activate.ps1
 $env:DATA_PATH = "$PWD\data\sample"
-cd backend
-python -m pytest -q ..\tests
-cd ..\frontend
-npm ci
-npm run build
+cd backend; python -m pytest -q ../tests; cd ..
+cd frontend; npm ci; npm run lint; npm run typecheck; npm run build; cd ..
+# Smoke prod
+bash scripts/smoke.sh https://dabapulse-api.onrender.com
 ```
 
-## Contenu qui entre dans `main`
+## Contenu qui entre dans `main` (cette PR groupée)
 
-MVP complet sur `engineering-lead/mvp-foundation` :
+**INC-04 feat(ui) — HorizonX motion (sans régression) :**
+- `frontend/src/lib/motion.ts` (useCountUp + usePrefersReducedMotion)
+- `frontend/src/index.css` (+shimmer, card-hover, btn-shine, prefers-reduced-motion)
+- `frontend/src/components/ui.tsx` (Panel card-hover, PrimaryButton shine)
+- `frontend/src/screens/SituationScreen.tsx` (hero RaR count-up 486k)
 
-- Backend FastAPI + engines (risk, decision, sim, AI fallback)
-- Frontend Decision Theater (6 écrans)
-- Export / import CSV
-- Dataset synthétique
-- setup.md, DEPLOY.md, runbook, security notes
-- Config Render + Netlify
-- CI élargie
+**INC-05 perf — code-split :**
+- `frontend/src/App.tsx` (Situation eager, 5 autres `React.lazy` + `Suspense`)
+- `frontend/vite.config.ts` (manualChunks react/charts/ui, 661→241kB initial)
 
-**Ne prétend pas** inclure Business Twin, CRM, marketplace, etc.
+**INC-06 fix(engineering) — robustesse démo :**
+- `backend/app/services/csv_import.py` (MAX 5MB, utf-8-sig, empty check)
+- `backend/app/api/routes.py` (upload 413, reload idempotent)
+- `frontend/src/lib/api.ts` (parseError, timeout 15s, blob check)
+- `frontend/src/context/PulseContext.tsx` (retry 900ms cold start)
+- `frontend/src/screens/SituationScreen.tsx` (pre-checks .csv/empty/5MB)
 
-## Titre de merge recommandé
+**Déjà dans `main` (PR #4-6) :** INC-01 Ruff W292, INC-02 hardening sécu, INC-03 deploy (render.yaml, netlify.toml, start-api.sh, smoke.sh)
+
+**Ne prétend pas** inclure Business Twin, CRM, Supabase, etc.
+
+## Titre de PR recommandé
 
 ```text
-Merge: Engineering foundation — Revenue-at-Risk MVP production readiness
+Merge: HorizonX motion + perf code-split + CSV hardening (INC-04→06)
 ```
 
-Description PR (si tu utilises une PR) :
+Description PR (copie/colle) :
 
 ```text
 ## Summary
-- Merge engineering-lead/mvp-foundation into main
-- DabaPulse MVP: RaR + Decision Engine + What-if + AI explanation
-- Deploy configs (Render API + Netlify front)
-- Hardened deps + monorepo npm entrypoint
+- Merge engineering-lead/mvp-foundation (a699d98..000e395) into main
+- INC-04 feat(ui): HorizonX-inspired motion (count-up 486k, shine, card-hover, prefers-reduced-motion) — +0.8kB
+- INC-05 perf: code-split Decision Theater — index 662kB → 25kB + react 217kB + charts 386kB (initial 241kB, -63%)
+- INC-06 fix: harden CSV import/export and reload — 5MB guard, 413, timeout 15s, retry 900ms, friendly missing_columns
+- Prod verified: https://dabapulse.netlify.app (CORS https://dabapulse.netlify.app) + https://dabapulse-api.onrender.com 14 PASS
 
 ## Test plan
-- [ ] pytest (backend)
-- [ ] npm run build (frontend)
-- [ ] /api/health + scenario B001/P005 = 486000 FCFA
+- [x] ruff 0, pip-audit clean, pytest 18
+- [x] oxlint 0 errors, tsc 0, build 25kB+react+charts
+- [x] bash scripts/smoke.sh https://dabapulse-api.onrender.com → 14 PASS
+- [x] https://dabapulse.netlify.app — hero animé, no Failed to fetch, Import CSV .xlsx → message clair
+
+## Risk
+Aucun — pure front (lazy/suspense) + guards backend 5MB — aucune route/formule RaR touchée.
+
+## Checklist PR
+- [ ] CI DabaPulse verte sur EL
+- [ ] Deploy Netlify auto (index 25kB) après merge
+- [ ] Smoke prod re-run après merge
 ```
 
 ---
@@ -77,70 +95,49 @@ Description PR (si tu utilises une PR) :
 
 ### 1. Ouvrir la PR sur GitHub
 
-1. https://github.com/Stane316/daba-pulse  
-2. **Compare & pull request**  
-3. base: **`main`** ← compare: **`engineering-lead/mvp-foundation`**  
-4. Title: `Merge: Engineering foundation — Revenue-at-Risk MVP production readiness`  
-5. Create pull request  
-6. Attendre CI verte (si activée)  
-7. **Merge pull request** (Create a merge commit ou Squash — préfère **merge commit** pour garder l’historique Engineering)
+1. https://github.com/Stane316/daba-pulse
+2. **Compare & pull request**
+3. base: **`main`** ← compare: **`engineering-lead/mvp-foundation`**
+4. Title: `Merge: HorizonX motion + perf code-split + CSV hardening (INC-04→06)`
+5. Body: coller la Description ci-dessus
+6. Create pull request
+7. Attendre **DabaPulse CI** verte (3 jobs)
+8. **Merge pull request** → **Create a merge commit** (préfère merge commit pour garder `a699d98..000e395`)
 
 ### 2. Mettre à jour ton clone local après merge UI
 
 ```powershell
-cd C:\Users\HP\Downloads\daba-pulse
 git fetch origin
 git checkout main
 git pull origin main
-git log -5 --oneline
-git status
+git log --oneline -n 6  # doit afficher Merge PR #7 + a699d98..000e395
+git diff main..engineering-lead/mvp-foundation --stat  # doit être vide
 ```
-
-Attendu : `main` pointe sur un merge qui contient le MVP (plus seulement `df79214`).
 
 ---
 
 ## Option B — Merge en ligne de commande (PowerShell)
 
-> À n’utiliser que si tu es à l’aise et que `main` n’a pas divergé avec du travail concurrent.
+> À n’utiliser que si tu es à l’aise et que `main` n’a pas divergé.
 
 ```powershell
-cd C:\Users\HP\Downloads\daba-pulse
-
 git fetch origin
-
-# 1) Branche Engineering propre
 git checkout engineering-lead/mvp-foundation
 git pull origin engineering-lead/mvp-foundation
-git status
-# working tree DOIT être clean
+git status  # clean
 
-# 2) Mettre main à jour
 git checkout main
 git pull origin main
 
-# 3) Merge
-git merge --no-ff engineering-lead/mvp-foundation -m "Merge: Engineering foundation — Revenue-at-Risk MVP production readiness"
+git merge --no-ff engineering-lead/mvp-foundation -m "Merge: HorizonX motion + perf code-split + CSV hardening (INC-04→06)"
 
-# 4) Si conflits : résoudre, git add <files>, git commit
-
-# 5) Re-tests sur main
-.\.venv\Scripts\Activate.ps1
+# Re-tests
 $env:DATA_PATH = "$PWD\data\sample"
-cd backend
-python -m pytest -q ..\tests
-cd ..\frontend
-npm ci
-npm run build
-cd ..
+cd backend; python -m pytest -q ../tests; cd ..
+cd frontend; npm ci; npm run build; cd ..
 
-# 6) Push main (TOI uniquement)
 git push origin main
-
-# 7) Vérification
-git fetch origin
 git log origin/main -5 --oneline
-git ls-tree -r --name-only origin/main | Select-String "setup.md|render.yaml|netlify.toml|risk_engine|SituationScreen"
 ```
 
 ---
@@ -150,19 +147,12 @@ git ls-tree -r --name-only origin/main | Select-String "setup.md|render.yaml|net
 ```powershell
 git checkout main
 git pull origin main
-
-# Doit exister sur origin/main :
-git show origin/main:setup.md | Measure-Object -Character
-git show origin/main:backend/app/engines/risk_engine.py | Select-Object -First 3
-git show origin/main:package.json
+git show origin/main:frontend/src/lib/motion.ts | Select-String "useCountUp"
+git show origin/main:frontend/src/App.tsx | Select-String "lazy"
+git show origin/main:README.md | Select-String "Déployé"
 ```
 
-Puis seulement :
-
-1. Deploy **Render** (API) — voir `docs/DEPLOY.md`  
-2. Deploy **Netlify** (front) avec `VITE_API_URL`  
-3. CORS Render → URL Netlify  
-4. Smoke prod  
+Puis : `bash scripts/smoke.sh https://dabapulse-api.onrender.com` (doit rester 14 PASS) + vérifier `https://dabapulse.netlify.app` (hero animé).
 
 ---
 
@@ -170,15 +160,13 @@ Puis seulement :
 
 | Problème | Action |
 |----------|--------|
-| Conflits sur README / .gitignore / ci.yml | Garder la version Engineering Lead pour le produit ; relire manuellement |
+| Conflits sur README / ci.yml | Garder `engineering-lead` pour le produit |
 | CI rouge | Ne pas merger ; corriger sur EL puis re-PR |
 | main a d’autres commits non liés | Rebase/merge avec l’équipe avant force |
-| Oubli de push main | `git push origin main` après tests locaux |
-
----
+| Oubli de push main | `git push origin main` après tests |
 
 ## Ce que ce merge N’EST PAS
 
-- Pas une release Business Twin  
-- Pas une intégration Supabase obligatoire  
-- Pas une garantie « zero CVE npm » (router résiduel documenté)  
+- Pas une release Business Twin
+- Pas une intégration Supabase obligatoire
+- Pas un `npm audit fix --force` (router 8.x reste bloqué)

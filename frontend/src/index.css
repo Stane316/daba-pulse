@@ -131,6 +131,21 @@ body::before {
   }
 }
 
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
 .animate-fade-up {
   animation: fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -155,16 +170,42 @@ body::before {
   animation-delay: 0.4s;
 }
 
+.stagger-1 { animation-delay: 0.06s; }
+.stagger-2 { animation-delay: 0.12s; }
+.stagger-3 { animation-delay: 0.18s; }
+.stagger-4 { animation-delay: 0.24s; }
+
 /* Flow line for stock movement */
 .flow-line {
   stroke-dasharray: 6 8;
   animation: flow-dash 1.2s linear infinite;
 }
 
-@keyframes flow-dash {
-  to {
-    stroke-dashoffset: -28;
-  }
+/* Shine effect for primary buttons */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.55s ease;
+}
+.btn-shine:hover::after {
+  transform: translateX(100%);
+}
+
+/* Card hover depth (HorizonX-inspired) */
+.card-hover {
+  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+.card-hover:hover {
+  border-color: color-mix(in oklab, var(--color-amber) 18%, transparent);
+  transform: translateY(-1px);
+  box-shadow: 0 16px 40px -28px rgba(0,0,0,0.6);
 }
 
 /* Focus */
@@ -192,4 +233,15 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
   border: 2px solid var(--color-charcoal);
   box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-amber) 20%, transparent);
+}
+
+/* Reduced motion — respect user preference */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-in,
+  .flow-line,
+  .btn-shine::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

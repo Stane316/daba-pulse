@@ -102,7 +102,7 @@ export function Panel({
   return (
     <div
       className={cn(
-        'animate-fade-up rounded-2xl border border-white/5 bg-charcoal/70 p-5 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.7)] backdrop-blur-sm',
+        'animate-fade-up card-hover rounded-2xl border border-white/5 bg-charcoal/70 p-5 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.7)] backdrop-blur-sm',
         delay === 1 && 'delay-1',
         delay === 2 && 'delay-2',
         delay === 3 && 'delay-3',
@@ -172,7 +172,7 @@ export function PrimaryButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-full bg-amber px-5 py-2.5 text-sm font-semibold text-charcoal transition hover:bg-sand disabled:cursor-not-allowed disabled:opacity-40',
+        'btn-shine inline-flex items-center justify-center gap-2 rounded-full bg-amber px-5 py-2.5 text-sm font-semibold text-charcoal transition hover:bg-sand disabled:cursor-not-allowed disabled:opacity-40',
         className,
       )}
     >

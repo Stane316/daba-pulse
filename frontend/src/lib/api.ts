@@ -9,19 +9,47 @@ import type {
 
 const BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || ''
 
+async function parseError(res: Response): Promise<string> {
+  const body = await res.text()
+  try {
+    const j = JSON.parse(body)
+    // FastAPI detail peut être string, objet {message, ...} ou liste
+    if (typeof j.detail === 'string') return j.detail
+    if (j.detail && typeof j.detail.message === 'string') return j.detail.message
+    if (Array.isArray(j.detail)) return j.detail.map((d: { msg?: string }) => d.msg || JSON.stringify(d)).join(', ')
+    return JSON.stringify(j.detail) || body
+  } catch {
+    return body
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: HeadersInit = { ...(init?.headers || {}) }
   if (!(init?.body instanceof FormData)) {
     ;(headers as Record<string, string>)['Content-Type'] =
       (headers as Record<string, string>)['Content-Type'] || 'application/json'
   }
-  const res = await fetch(`${BASE}${path}`, {
-    ...init,
-    headers,
-  })
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 15000)
+  let res: Response
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      ...init,
+      headers,
+      signal: controller.signal,
+    })
+  } catch (e) {
+    clearTimeout(timeout)
+    if (e instanceof DOMException && e.name === 'AbortError') throw new Error('Délai dépassé — API indisponible (cold start Render 50s ?)')
+    throw e
+  }
+  clearTimeout(timeout)
   if (!res.ok) {
-    const body = await res.text()
-    throw new Error(body || `Erreur ${res.status}`)
+    const msg = await parseError(res)
+    // Messages jury-friendly pour les cas fréquents
+    if (res.status === 413) throw new Error(msg || 'Fichier trop volumineux (limite 5 Mo)')
+    if (res.status === 400) throw new Error(msg)
+    throw new Error(msg || `Erreur ${res.status}`)
   }
   const ct = res.headers.get('content-type') || ''
   if (ct.includes('application/json')) {
@@ -114,9 +142,11 @@ export const api = {
       `${BASE}/api/export/decision/${encodeURIComponent(situationId)}?format=${format}${q}`,
     )
     if (!res.ok) {
-      throw new Error(await res.text())
+      const msg = await parseError(res)
+      throw new Error(msg)
     }
     const blob = await res.blob()
+    if (blob.size === 0) throw new Error('Export vide — réessayez')
     const ext = format === 'markdown' ? 'md' : 'json'
     downloadBlob(blob, `dabapulse-decision-${situationId}.${ext}`)
   },
