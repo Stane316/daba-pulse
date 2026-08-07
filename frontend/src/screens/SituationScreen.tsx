@@ -126,60 +126,58 @@ export function SituationScreen() {
           </p>
         </div>
 
-        {/* Mini vue */}
-        <Panel className="flex flex-col justify-between" delay={1}>
-          <div>
-            <div className="mb-4 text-[11px] uppercase tracking-[0.16em] text-mineral">
-              Mini-vue opérationnelle
+        {/* Mini vue — Editorial stack (INC-10: HorizonX 1-col + sparkline) */}
+        <Panel className="flex flex-col" delay={1}>
+          <div className="mb-5 text-[11px] uppercase tracking-[0.16em] text-mineral">
+            Mini-vue opérationnelle
+          </div>
+          <div className="divide-y divide-white/5">
+            <div className="flex items-center justify-between py-3 first:pt-0">
+              <span className="text-[11px] uppercase tracking-[0.16em] text-mineral">Stock total</span>
+              <span className="num text-lg font-medium text-bone">
+                {formatNumber(mini.stock_total)} <span className="text-xs font-normal text-mineral">unités</span>
+              </span>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <MetricBlock
-                label="Stock total"
-                value={formatNumber(mini.stock_total)}
-                hint="unités"
-              />
-              <MetricBlock
-                label="Demande 7j"
-                value={formatNumber(mini.demande_totale)}
-                hint="unités estimées"
-              />
-              <MetricBlock
-                label="Déficit total"
-                value={formatNumber(mini.deficit_total)}
-                tone="risk"
-                hint="unités non servies"
-              />
-              <MetricBlock
-                label="Note Google"
-                value={mini.visibilite?.note_google?.toFixed(1) ?? '—'}
-                hint={`${mini.visibilite?.nb_avis ?? 0} avis`}
-                tone="amber"
-              />
+            <div className="flex items-center justify-between py-3">
+              <span className="text-[11px] uppercase tracking-[0.16em] text-mineral">Demande 7j</span>
+              <span className="num text-lg font-medium text-bone">
+                {formatNumber(mini.demande_totale)} <span className="text-xs font-normal text-mineral">estimées</span>
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-3">
+              <span className="text-[11px] uppercase tracking-[0.16em] text-mineral">Déficit total</span>
+              <span className="num text-lg font-semibold text-risk-soft">
+                {formatNumber(mini.deficit_total)} <span className="text-xs font-normal text-mineral">non servies</span>
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-3">
+              <span className="text-[11px] uppercase tracking-[0.16em] text-mineral">Note Google</span>
+              <span className="num text-lg font-medium text-amber">
+                {mini.visibilite?.note_google?.toFixed(1) ?? '—'} <span className="text-xs font-normal text-mineral">{mini.visibilite?.nb_avis ?? 0} avis</span>
+              </span>
             </div>
           </div>
 
           {mini.demande_par_boutique && (
-            <div className="mt-6 space-y-2">
-              <div className="text-[10px] uppercase tracking-[0.16em] text-mineral">
-                Demande par boutique
+            <div className="mt-6">
+              <div className="mb-3 text-[10px] uppercase tracking-[0.16em] text-mineral">Demande par boutique</div>
+              <div className="space-y-3">
+                {mini.demande_par_boutique.slice(0, 4).map((b) => {
+                  const max = mini.demande_par_boutique![0].demande || 1
+                  return (
+                    <div key={b.boutique_id} className="group flex items-center gap-3">
+                      <span className="w-28 truncate text-[11px] text-bone-dim">{b.nom}</span>
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-charcoal-soft">
+                        <div
+                          className="h-full rounded-full bg-petrol-light transition-all duration-700"
+                          style={{ width: `${(b.demande / max) * 100}%` }}
+                        />
+                      </div>
+                      <span className="num w-10 text-right text-[11px] text-mineral">{b.demande}</span>
+                    </div>
+                  )
+                })}
               </div>
-              {mini.demande_par_boutique.slice(0, 4).map((b) => {
-                const max = mini.demande_par_boutique![0].demande || 1
-                return (
-                  <div key={b.boutique_id}>
-                    <div className="mb-0.5 flex justify-between text-[11px]">
-                      <span className="text-bone-dim">{b.nom}</span>
-                      <span className="num text-mineral">{b.demande}</span>
-                    </div>
-                    <div className="h-1 overflow-hidden rounded-full bg-charcoal-soft">
-                      <div
-                        className="h-full rounded-full bg-petrol-light"
-                        style={{ width: `${(b.demande / max) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                )
-              })}
             </div>
           )}
         </Panel>
@@ -252,70 +250,88 @@ export function SituationScreen() {
       <div className="grid gap-3">
         {situations.map((s, i) => {
           const active = s.id === selectedId
+          const isHero = i === 0
+          if (isHero) {
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => selectSituation(s.id)}
+                className={cn(
+                  'animate-fade-up group grid w-full grid-cols-1 items-center gap-4 rounded-3xl border-2 p-6 text-left transition md:grid-cols-[auto_1fr_auto_auto]',
+                  active
+                    ? 'border-amber/40 bg-gradient-to-br from-amber/10 via-charcoal to-charcoal shadow-[0_0_0_1px_rgba(201,150,58,0.15)]'
+                    : 'border-amber/20 bg-charcoal/60 hover:border-amber/30 hover:bg-charcoal-soft/40',
+                  'delay-1',
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="num flex h-12 w-12 items-center justify-center rounded-full bg-amber text-base font-bold text-charcoal">1</span>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <ScopeTag scope={s.scope} />
+                      <SeverityBadge value={s.severite} />
+                    </div>
+                    <div className="mt-2 text-base font-semibold text-bone">
+                      {s.boutique?.nom ?? 'DABA — global'}
+                      {s.produit ? <span className="text-bone-dim"> · {s.produit.nom}</span> : null}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="min-w-0">
+                  <div className="truncate text-xs uppercase tracking-[0.14em] text-mineral">{riskTypeLabel(s.type_risque)}</div>
+                  <div className="mt-1 text-sm leading-snug text-bone-dim">{s.signal}</div>
+                </div>
+
+                <div className="text-left md:text-right">
+                  <div className="text-[10px] uppercase tracking-[0.14em] text-mineral">Revenu exposé</div>
+                  <div className="num text-xl font-bold text-risk-soft">{formatFCFA(s.revenue_at_risk, true)}</div>
+                  <div className="mt-1 text-[10px] text-mineral">Priorité absolue — {s.deficit_potentiel ?? '—'} u. manquantes</div>
+                </div>
+
+                <div className="flex flex-col items-end gap-2">
+                  <ConfidenceBadge level={s.niveau_confiance} score={s.confiance} />
+                  <span className={cn('text-xs font-semibold', active ? 'text-amber' : 'text-mineral group-hover:text-sand')}>
+                    {active ? 'Sélectionnée' : 'Ouvrir →'}
+                  </span>
+                </div>
+              </button>
+            )
+          }
           return (
             <button
               key={s.id}
               type="button"
               onClick={() => selectSituation(s.id)}
               className={cn(
-                'animate-fade-up group grid w-full grid-cols-1 items-center gap-4 rounded-2xl border p-4 text-left transition md:grid-cols-[auto_1fr_auto_auto]',
+                'animate-fade-up group flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition',
                 active
-                  ? 'border-amber/40 bg-amber/8 shadow-[0_0_0_1px_rgba(201,150,58,0.15)]'
-                  : 'border-white/5 bg-charcoal/50 hover:border-white/15 hover:bg-charcoal-soft/40',
-                i < 5 && `delay-${Math.min(i + 1, 5)}`,
+                  ? 'border-amber/30 bg-amber/5'
+                  : 'border-white/5 bg-charcoal/40 hover:border-white/10 hover:bg-charcoal-soft/30',
+                `delay-${Math.min(i, 5)}`,
               )}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <span
                   className={cn(
-                    'num flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold',
-                    s.severite === 'critique'
-                      ? 'bg-risk/20 text-risk-soft'
-                      : 'bg-white/5 text-mineral',
+                    'num flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold',
+                    s.severite === 'critique' ? 'bg-risk/20 text-risk-soft' : 'bg-white/5 text-mineral',
                   )}
                 >
                   {s.priorite}
                 </span>
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <ScopeTag scope={s.scope} />
-                    <SeverityBadge value={s.severite} />
-                  </div>
-                  <div className="mt-1.5 text-sm font-medium text-bone">
-                    {s.boutique?.nom ?? 'DABA — global'}
-                    {s.produit ? (
-                      <span className="text-bone-dim"> · {s.produit.nom}</span>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-
-              <div className="min-w-0">
-                <div className="truncate text-xs text-mineral">
-                  {riskTypeLabel(s.type_risque)}
-                </div>
-                <div className="mt-0.5 truncate text-sm text-bone-dim">{s.signal}</div>
-              </div>
-
-              <div className="text-left md:text-right">
-                <div className="text-[10px] uppercase tracking-[0.14em] text-mineral">
-                  Revenu exposé
-                </div>
-                <div className="num text-lg font-semibold text-risk-soft">
-                  {formatFCFA(s.revenue_at_risk, true)}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <ConfidenceBadge level={s.niveau_confiance} score={s.confiance} />
-                <span
-                  className={cn(
-                    'text-xs font-medium transition',
-                    active ? 'text-amber' : 'text-mineral group-hover:text-sand',
-                  )}
-                >
-                  {active ? 'Sélectionnée' : 'Ouvrir'}
+                <span className="hidden sm:inline-flex">
+                  <SeverityBadge value={s.severite} />
                 </span>
+                <span className="text-sm font-medium text-bone truncate max-w-[160px] md:max-w-[200px]">
+                  {s.boutique?.nom ?? 'Global'} {s.produit ? <span className="text-bone-dim hidden md:inline">· {s.produit.nom}</span> : null}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="num text-sm font-semibold text-risk-soft hidden md:inline">{formatFCFA(s.revenue_at_risk, true)}</span>
+                <span className="num text-sm font-semibold text-risk-soft md:hidden">{(s.revenue_at_risk / 1000).toFixed(0)}k</span>
+                <span className={cn('text-xs', active ? 'text-amber' : 'text-mineral group-hover:text-sand')}>{active ? '●' : '→'}</span>
               </div>
             </button>
           )

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BeforeAfterTransform } from '../components/FlowDiagram'
 import { RarComparisonBars } from '../components/StockDemandChart'
@@ -71,6 +71,14 @@ export function SimulationScreen() {
         <span className="text-mineral">Scénario : </span>
         {sim.action_libelle}
       </div>
+
+      {/* Cinematic — 27 particules RaR qui s'envolent (INC-13, HorizonX P09) */}
+      <DeficitParticles
+        deficitAvant={sim.metriques.find((m) => m.cle === 'deficit')?.avant as number | undefined}
+        deficitApres={sim.metriques.find((m) => m.cle === 'deficit')?.apres as number | undefined}
+        protege={sim.revenu_potentiellement_protege}
+        qty={qty}
+      />
 
       {/* AVANT → ACTION → APRÈS */}
       <div className="animate-fade-up delay-1 mb-8">
@@ -205,6 +213,106 @@ export function SimulationScreen() {
         <PrimaryButton onClick={() => navigate('/explication')}>
           Demander l'explication IA
         </PrimaryButton>
+      </div>
+    </div>
+  )
+}
+
+function DeficitParticles({
+  deficitAvant,
+  deficitApres,
+  protege,
+  qty,
+}: {
+  deficitAvant?: number
+  deficitApres?: number
+  protege: number
+  qty: number
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const count = Math.max(0, Math.round((deficitAvant ?? 0) - (deficitApres ?? 0)))
+  const show = (deficitAvant ?? 0) > 0 && (deficitApres ?? 0) === 0 && count > 0
+
+  useEffect(() => {
+    if (!show || reduced || !canvasRef.current) return
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const dpr = window.devicePixelRatio || 1
+    const rect = canvas.getBoundingClientRect()
+    canvas.width = rect.width * dpr
+    canvas.height = rect.height * dpr
+    ctx.scale(dpr, dpr)
+    const W = rect.width
+    const H = rect.height
+
+    type P = { x: number; y: number; vx: number; vy: number; r: number; a: number }
+    const particles: P[] = Array.from({ length: Math.min(count, 32) }, () => ({
+      x: 20 + Math.random() * (W - 40),
+      y: H - 10 - Math.random() * 18,
+      vx: (Math.random() - 0.5) * 0.8,
+      vy: -1.2 - Math.random() * 1.8,
+      r: 2.2 + Math.random() * 1.4,
+      a: 0.9,
+    }))
+
+    let raf = 0
+    let t = 0
+    const duration = 1400
+    const start = performance.now()
+    const tick = (now: number) => {
+      t = now - start
+      const progress = Math.min(1, t / duration)
+      ctx.clearRect(0, 0, W, H)
+      particles.forEach((p) => {
+        p.x += p.vx
+        p.y += p.vy
+        p.vy -= 0.02 // léger flottement
+        p.a = 0.9 * (1 - progress)
+        // halo
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.r * 2.2, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(201,150,58,${p.a * 0.12})`
+        ctx.fill()
+        // cœur
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(201,150,58,${p.a})`
+        ctx.fill()
+      })
+      if (progress < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [show, reduced, count, qty, protege])
+
+  if (!show) {
+    // Fallback statique si pas de deficit à animer
+    return (
+      <div className="animate-fade-up mb-6 flex items-center justify-center gap-2 rounded-xl border border-white/5 bg-charcoal/30 px-4 py-3 text-xs text-mineral">
+        <span className="h-1.5 w-1.5 rounded-full bg-amber/60" />
+        {count > 0 ? `${count} unités manquantes` : 'Ajustez la quantité pour voir les unités s’envoler'} — {formatFCFA(protege, true)} protégés si déficit → 0
+      </div>
+    )
+  }
+
+  return (
+    <div className="animate-fade-up mb-6 overflow-hidden rounded-xl border border-amber/20 bg-gradient-to-br from-charcoal via-charcoal to-amber/5 p-4">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-[11px] uppercase tracking-[0.16em] text-amber">27 unités s’envolent</span>
+        <span className="num text-xs font-semibold text-sage-light">{formatFCFA(protege, true)} protégés</span>
+      </div>
+      <div className="relative">
+        <canvas ref={canvasRef} width={320} height={80} className="h-[80px] w-full" style={{ display: 'block' }} />
+        {!reduced && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <span className="rounded-full bg-amber px-3 py-1 text-[11px] font-semibold text-charcoal shadow">−{count} → 0</span>
+          </div>
+        )}
+      </div>
+      <div className="mt-2 text-center text-[11px] text-mineral">
+        Chaque point = 1 unité · {reduced ? 'Animation désactivée (préférence système)' : 'Survolez le slider pour rejouer'}
       </div>
     </div>
   )
