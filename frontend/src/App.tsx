@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { TheaterShell } from './components/TheaterShell'
 import { LoadingScreen } from './components/ui'
@@ -24,6 +24,15 @@ const HorizonScreen = lazy(() =>
   import('./screens/HorizonScreen').then((m) => ({ default: m.HorizonScreen })),
 )
 
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    document.getElementById('main-content')?.focus({ preventScroll: true })
+  }, [pathname])
+  return null
+}
+
 function AnimatedRoutes() {
   const location = useLocation()
   return (
@@ -48,6 +57,7 @@ export default function App() {
     <ThemeProvider>
       <PulseProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <a
             href="#main-content"
             className="sr-only z-[100] bg-amber px-4 py-2 text-sm font-medium text-charcoal focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:rounded-full"

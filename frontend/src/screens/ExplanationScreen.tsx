@@ -18,6 +18,9 @@ const SUGGESTIONS = [
   'Quels facteurs expliquent le risque ?',
   'Que se passe-t-il si je réduis la quantité ?',
   'Quel revenu est potentiellement protégé ?',
+  'Et si on envoyait 20 unités ?',
+  'Quelle hypothèse est la plus fragile ?',
+  'Et si on n\'agit pas ?',
 ]
 
 export function ExplanationScreen() {
@@ -115,7 +118,7 @@ export function ExplanationScreen() {
           n'est inventé — l'application reste fonctionnelle sans modèle de langage.
         </div>
 
-        <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2">
           <StoryBlock step="01" title="Situation" body={explanation?.situation} loading={busy && !explanation} accent />
           <StoryBlock step="02" title="Facteurs" body={explanation?.facteurs?.length ? explanation.facteurs.map((f) => `• ${f}`).join('\n') : undefined} loading={busy && !explanation} />
           <StoryBlock step="03" title="Décision" body={explanation?.decision} loading={busy && !explanation} />

@@ -80,8 +80,8 @@ export function SimulationScreen() {
         qty={qty}
       />
 
-      {/* AVANT → ACTION → APRÈS */}
-      <div className="animate-fade-up delay-1 mb-8">
+      {/* AVANT → ACTION → APRÈS — Anime.js stagger */}
+      <div key={qty} className="animate-fade-up delay-1 mb-8">
         <BeforeAfterTransform
           rarAvant={sim.revenue_at_risk_avant}
           rarApres={sim.revenue_at_risk_apres}
@@ -105,8 +105,12 @@ export function SimulationScreen() {
                 </tr>
               </thead>
               <tbody>
-                {sim.metriques.map((m) => (
-                  <tr key={m.cle} className="border-b border-white/5">
+                {sim.metriques.map((m, idx) => (
+                  <tr
+                    key={m.cle}
+                    className={`border-b border-white/5 animate-fade-up delay-${Math.min(idx + 1, 5)}`}
+                    style={{ animationDelay: `${idx * 70}ms` } as React.CSSProperties}
+                  >
                     <td className="py-2.5 text-bone-dim">{m.libelle}</td>
                     <td className="num py-2.5 text-risk-soft/90">
                       {fmt(m.avant, m.unite)}
