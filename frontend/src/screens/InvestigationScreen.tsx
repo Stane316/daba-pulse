@@ -109,80 +109,58 @@ export function InvestigationScreen() {
               Lecture quantitative
             </div>
             {isDist ? (
-              <div className="grid grid-cols-2 gap-5 md:grid-cols-3">
-                <MetricBlock
-                  label="Demande attendue"
-                  value={formatNumber(s.demande_attendue)}
-                  hint={`${s.horizon_jours} jours`}
-                  tone="amber"
-                  large
-                />
-                <MetricBlock
-                  label="Stock disponible"
-                  value={formatNumber(s.stock_disponible)}
-                  hint={`cible ${formatNumber(s.stock_cible)}`}
-                  large
-                />
-                <MetricBlock
-                  label="Déficit potentiel"
-                  value={formatNumber(s.deficit_potentiel)}
-                  tone="risk"
-                  large
-                />
-                <MetricBlock
-                  label="Prix unitaire net"
-                  value={formatFCFA(s.prix_unitaire ?? 0, true)}
-                />
-                <MetricBlock
-                  label="Revenue-at-Risk"
-                  value={formatFCFA(s.revenue_at_risk, true)}
-                  tone="risk"
-                />
-                <MetricBlock
-                  label="Couverture"
-                  value={
-                    s.metriques_extra?.couverture_jours != null
-                      ? `${formatNumber(s.metriques_extra.couverture_jours as number, 1)} j`
-                      : '—'
-                  }
-                  hint={
-                    s.metriques_extra?.delai_reappro != null
-                      ? `délai réappro ${s.metriques_extra.delai_reappro} j`
-                      : undefined
-                  }
-                />
+              <div className="grid grid-cols-3 gap-3">
+                <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-charcoal/60 p-4">
+                  <div className="pointer-events-none absolute -right-2 -top-2 select-none font-display text-5xl leading-none text-white/[0.04]">35</div>
+                  <MetricBlock label="Demande attendue" value={formatNumber(s.demande_attendue)} hint={`${s.horizon_jours} jours`} tone="amber" />
+                </div>
+                <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-charcoal/60 p-4">
+                  <div className="pointer-events-none absolute -right-2 -top-2 select-none font-display text-5xl leading-none text-white/[0.04]">8</div>
+                  <MetricBlock label="Stock disponible" value={formatNumber(s.stock_disponible)} hint={`cible ${formatNumber(s.stock_cible)}`} />
+                </div>
+                <div className="relative col-span-3 overflow-hidden rounded-2xl border border-risk/20 bg-gradient-to-br from-risk/10 via-charcoal to-charcoal p-5 md:col-span-1">
+                  <div className="pointer-events-none absolute -right-4 -top-4 select-none font-display text-7xl leading-none text-risk/[0.07]">{formatNumber(s.deficit_potentiel)}</div>
+                  <MetricBlock label="Déficit potentiel" value={formatNumber(s.deficit_potentiel)} tone="risk" large />
+                </div>
+                <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-charcoal/60 p-4">
+                  <MetricBlock label="Prix unitaire net" value={formatFCFA(s.prix_unitaire ?? 0, true)} />
+                </div>
+                <div className="relative col-span-2 overflow-hidden rounded-2xl border border-risk/20 bg-gradient-to-br from-charcoal via-charcoal to-risk/5 p-5 md:col-span-2">
+                  <div className="pointer-events-none absolute -right-6 -bottom-2 select-none font-display text-6xl leading-none text-risk/[0.06]">486k</div>
+                  <MetricBlock label="Revenue-at-Risk" value={formatFCFA(s.revenue_at_risk, true)} tone="risk" large />
+                </div>
+                <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-charcoal/60 p-4">
+                  <MetricBlock
+                    label="Couverture"
+                    value={
+                      s.metriques_extra?.couverture_jours != null
+                        ? `${formatNumber(s.metriques_extra.couverture_jours as number, 1)} j`
+                        : '—'
+                    }
+                    hint={
+                      s.metriques_extra?.delai_reappro != null
+                        ? `délai réappro ${s.metriques_extra.delai_reappro} j`
+                        : undefined
+                    }
+                  />
+                </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-5">
-                <MetricBlock
-                  label="Note Google"
-                  value={String(s.metriques_extra?.note_avis_google ?? '—')}
-                  hint="/5"
-                  tone="risk"
-                  large
-                />
-                <MetricBlock
-                  label="Avis"
-                  value={String(s.metriques_extra?.nb_avis_google ?? '—')}
-                  large
-                />
-                <MetricBlock
-                  label="Engagement"
-                  value={formatPct(s.metriques_extra?.engagement_reseaux as number)}
-                />
-                <MetricBlock
-                  label="Visiteurs / j"
-                  value={formatNumber(s.metriques_extra?.visiteurs_jour as number)}
-                />
-                <MetricBlock
-                  label="Conversion"
-                  value={formatPct(s.metriques_extra?.taux_conversion_global as number)}
-                />
-                <MetricBlock
-                  label="RaR réputation"
-                  value={formatFCFA(s.revenue_at_risk, true)}
-                  tone="risk"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-charcoal/60 p-4">
+                  <div className="pointer-events-none absolute -right-2 -top-2 select-none font-display text-5xl leading-none text-white/[0.04]">{String(s.metriques_extra?.note_avis_google ?? '—')}</div>
+                  <MetricBlock label="Note Google" value={String(s.metriques_extra?.note_avis_google ?? '—')} hint="/5" tone="risk" large />
+                </div>
+                <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-charcoal/60 p-4">
+                  <MetricBlock label="Avis" value={String(s.metriques_extra?.nb_avis_google ?? '—')} large />
+                </div>
+                <MetricBlock label="Engagement" value={formatPct(s.metriques_extra?.engagement_reseaux as number)} />
+                <MetricBlock label="Visiteurs / j" value={formatNumber(s.metriques_extra?.visiteurs_jour as number)} />
+                <MetricBlock label="Conversion" value={formatPct(s.metriques_extra?.taux_conversion_global as number)} />
+                <div className="relative col-span-2 overflow-hidden rounded-2xl border border-risk/20 bg-gradient-to-br from-charcoal to-risk/5 p-4">
+                  <div className="pointer-events-none absolute -right-4 -top-4 select-none font-display text-5xl leading-none text-risk/[0.07]">129k</div>
+                  <MetricBlock label="RaR réputation" value={formatFCFA(s.revenue_at_risk, true)} tone="risk" large />
+                </div>
               </div>
             )}
 
