@@ -121,7 +121,7 @@ export function HorizonScreen() {
                 ? 'border-sage/30'
                 : p.tone === 'next'
                   ? 'border-amber/20'
-                  : 'border-plum/30'
+                  : 'border-signal/30'
             }
           >
             <div className="text-[10px] uppercase tracking-[0.2em] text-mineral">
@@ -140,7 +140,7 @@ export function HorizonScreen() {
                         ? 'bg-sage'
                         : p.tone === 'next'
                           ? 'bg-amber'
-                          : 'bg-plum'
+                          : 'bg-signal'
                     }`}
                   />
                   {item}

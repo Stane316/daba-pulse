@@ -59,7 +59,7 @@ export function ScopeTag({ scope }: { scope: 'distribution' | 'reputation' }) {
         'rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]',
         scope === 'distribution'
           ? 'bg-petrol/30 text-sand'
-          : 'bg-plum/40 text-sand',
+          : 'bg-signal/30 text-sand',
       )}
     >
       {scope === 'distribution' ? 'Distribution' : 'Réputation'}

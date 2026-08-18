@@ -89,7 +89,7 @@ export function InvestigationScreen() {
               v: formatFCFA(s.revenue_at_risk, true),
               n: '04',
             },
-          ].map((step, i) => (
+          ].map((step) => (
             <div key={step.k} className="relative flex flex-1 flex-col items-center text-center">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber text-xs font-bold text-charcoal shadow-[0_0_0_4px_rgba(201,150,58,0.15)]">
                 {step.n}
