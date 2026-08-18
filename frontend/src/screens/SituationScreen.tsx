@@ -88,10 +88,13 @@ export function SituationScreen() {
         eyebrow="Situation exécutive"
       />
 
-      {/* Hero RaR — dominates the scene */}
+      {/* Hero RaR — dominates the scene — Bklit warm editorial */}
       <section className="animate-fade-up mb-10 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <div className="relative overflow-hidden rounded-3xl border border-risk/20 bg-gradient-to-br from-charcoal via-charcoal to-risk/10 p-6 md:p-10">
           <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-risk/10 blur-2xl" />
+          <div className="pointer-events-none absolute -right-4 bottom-0 select-none font-display text-[8rem] leading-none text-risk/[0.04] md:text-[10rem]">
+            {String(summary.revenue_at_risk_total).slice(0, 2)}
+          </div>
           <div className="text-[11px] uppercase tracking-[0.22em] text-risk-soft/80">
             Revenue-at-Risk total
           </div>
@@ -160,23 +163,37 @@ export function SituationScreen() {
 
           {mini.demande_par_boutique && (
             <div className="mt-6">
-              <div className="mb-3 text-[10px] uppercase tracking-[0.16em] text-mineral">Demande par boutique</div>
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-[10px] uppercase tracking-[0.16em] text-mineral">Demande par boutique — Bklit warm</span>
+                <span className="text-[10px] text-mineral">échelle amber</span>
+              </div>
               <div className="space-y-3">
-                {mini.demande_par_boutique.slice(0, 4).map((b) => {
+                {mini.demande_par_boutique.slice(0, 4).map((b, idx) => {
                   const max = mini.demande_par_boutique![0].demande || 1
+                  const pct = (b.demande / max) * 100
+                  const warm = [
+                    'bg-amber',
+                    'bg-amber/80',
+                    'bg-amber/60',
+                    'bg-amber/40',
+                  ][idx] ?? 'bg-amber/40'
                   return (
                     <div key={b.boutique_id} className="group flex items-center gap-3">
-                      <span className="w-28 truncate text-[11px] text-bone-dim">{b.nom}</span>
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-charcoal-soft">
+                      <span className="w-28 truncate text-[11px] font-medium text-bone-dim group-hover:text-bone transition-colors">{b.nom}</span>
+                      <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-charcoal-soft">
                         <div
-                          className="h-full rounded-full bg-petrol-light transition-all duration-700"
-                          style={{ width: `${(b.demande / max) * 100}%` }}
+                          className={`absolute inset-y-0 left-0 rounded-full ${warm} transition-all duration-700 ease-out`}
+                          style={{ width: `${pct}%` }}
                         />
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
-                      <span className="num w-10 text-right text-[11px] text-mineral">{b.demande}</span>
+                      <span className="num w-12 text-right text-[11px] font-semibold text-bone">{b.demande}</span>
                     </div>
                   )
                 })}
+              </div>
+              <div className="mt-2 text-[10px] leading-relaxed text-mineral">
+                Échelle warm monochrome — Bklit : 1 teinte, 4 opacités = hiérarchie sans couleur supplémentaire.
               </div>
             </div>
           )}
