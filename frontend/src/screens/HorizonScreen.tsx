@@ -190,6 +190,44 @@ export function HorizonScreen() {
         <style>{`@keyframes tunnel { 0% { transform: translateX(0) } 100% { transform: translateX(-50%) } } @media (prefers-reduced-motion: reduce) { .animate-\\[tunnel_18s_linear_infinite\\] { animation: none !important } }`}</style>
       </div>
 
+      {/* Data-driven motion — Ferme Expérience 100→20 20% (INC-20) */}
+      <Panel className="mb-8 border-sage/20 bg-gradient-to-br from-charcoal via-charcoal to-sage/5" delay={2}>
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.16em] text-sage-light">Data-driven motion — Ferme Expérience</div>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-bone-dim">
+              Si <span className="font-semibold text-bone">100 visiteurs</span> viennent à la ferme et que{' '}
+              <span className="font-semibold text-amber">20 achètent</span>, le système prédit{' '}
+              <span className="font-semibold text-sage-light">20% de conversion</span> et anticipe le stock nécessaire.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-center">
+              <div className="num text-2xl font-bold text-bone">100</div>
+              <div className="text-[10px] uppercase tracking-[0.14em] text-mineral">visiteurs</div>
+            </div>
+            <span className="text-mineral">→</span>
+            <div className="text-center">
+              <div className="num text-2xl font-bold text-amber">20</div>
+              <div className="text-[10px] uppercase tracking-[0.14em] text-mineral">achats</div>
+            </div>
+            <span className="text-mineral">→</span>
+            <div className="text-center">
+              <div className="num text-2xl font-bold text-sage-light">20%</div>
+              <div className="text-[10px] uppercase tracking-[0.14em] text-mineral">conversion</div>
+            </div>
+          </div>
+        </div>
+        <div className="mt-5 h-2 overflow-hidden rounded-full bg-charcoal-soft">
+          <div className="h-full w-[20%] rounded-full bg-gradient-to-r from-amber to-sage" style={{ animation: 'bar-grow 900ms cubic-bezier(0.22,1,0.36,1) both' }} />
+        </div>
+        <div className="mt-2 flex justify-between text-[10px] text-mineral">
+          <span>0%</span>
+          <span className="text-sage-light">20% — objectif Ferme</span>
+          <span>100%</span>
+        </div>
+      </Panel>
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {ECOSYSTEM.map((e, i) => {
           const Icon = ECO_ICONS[e.name]
