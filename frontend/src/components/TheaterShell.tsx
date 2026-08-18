@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Moon, Sun } from 'lucide-react'
+import { ArrowLeft, Moon, Sun } from 'lucide-react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { SCENES } from '../lib/scenes'
@@ -23,7 +23,6 @@ export function TheaterShell({ children }: { children: ReactNode }) {
   )
   const current = SCENES[currentIndex] ?? SCENES[0]
   const prev = SCENES[currentIndex - 1]
-  const next = SCENES[currentIndex + 1]
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
@@ -201,20 +200,8 @@ export function TheaterShell({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <button
-            type="button"
-            disabled={!next}
-            onClick={() => next && navigate(next.path)}
-            className={cn(
-              'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition',
-              next
-                ? 'bg-amber text-charcoal hover:bg-sand'
-                : 'text-mineral opacity-30',
-            )}
-          >
-            <span className="hidden sm:inline">{next?.label ?? 'Fin'}</span>
-            <ArrowRight size={16} />
-          </button>
+          <span className="hidden w-[120px] sm:inline" aria-hidden />
+          {/* Next supprimé — la navigation se fait par le CTA call-to-action de chaque écran (ex: Investiguer, Simuler) */}
         </div>
       </footer>
     </div>
