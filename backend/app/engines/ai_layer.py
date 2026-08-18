@@ -159,6 +159,57 @@ def _answer_question(
     boutique = (sit.get("boutique") or {}).get("nom", "cette boutique")
     produit = (sit.get("produit") or {}).get("nom", "ce produit")
 
+    # === Challenge IA — prioritaire (INC-19) : doit passer avant les handlers génériques ===
+    # Et si 20 unités ? → compare 20 vs recommandée
+    if any(w in q for w in ["20", "vingt"]) and any(w in q for w in ["unités", "unite", "envoi"]):
+        deficit = sit.get("deficit_potentiel") or 0
+        prix = sit.get("prix_unitaire") or 0
+        reco_q = dec.get("quantite") or sim.get("quantite") or 0
+        try:
+            deficit_f = float(deficit)
+            prix_f = float(prix)
+            reco_f = float(reco_q)
+            rar_20 = max(0, deficit_f - 20) * prix_f
+            rar_reco = max(0, deficit_f - reco_f) * prix_f
+            protege_20 = (sim.get("rar_avant") or 0) - rar_20
+            protege_reco = sim.get("protege") or 0
+            diff = protege_reco - protege_20
+            return (
+                f"Si 20 unités : déficit {deficit_f:.0f} → {max(0, deficit_f-20):.0f}, "
+                f"RaR {rar_20:,.0f} FCFA (protégé {protege_20:,.0f}). "
+                f"Recommandation {reco_f:.0f}u : RaR {rar_reco:,.0f} FCFA (protégé {protege_reco:,.0f}). "
+                f"Écart : {diff:,.0f} FCFA de plus protégés avec {reco_f:.0f}u. "
+                f"Raison : {reco_f:.0f}u couvre {reco_f/deficit_f*100:.0f}% du déficit vs {20/deficit_f*100:.0f}% pour 20u."
+                if deficit_f > 0
+                else f"20 unités couvriraient le déficit, comme {reco_f:.0f}u."
+            )
+        except Exception:
+            pass
+
+    # Et si on n'agit pas ? → RaR reste
+    if any(w in q for w in ["rien", "n'agit", "n-agit", "pas d'action", "aucune action", "0 unité", "0 unites", "ne rien faire"]):
+        rar_avant = sim.get("rar_avant") or sit.get("revenue_at_risk") or 0
+        return (
+            f"Si aucune action : le déficit de {sit.get('deficit_potentiel', '?')} unités persiste, "
+            f"le Revenue-at-Risk reste à {rar_avant:,.0f} FCFA. "
+            f"Aucun revenu n'est protégé. "
+            f"L'action recommandée ({dec.get('quantite', '?')}u) ramènerait le RaR à {sim.get('rar_apres', 0):,.0f} FCFA "
+            f"(protégé {sim.get('protege', 0):,.0f} FCFA)."
+        )
+
+    # Quelle hypothèse est la plus fragile ?
+    if any(w in q for w in ["hypothèse fragile", "hypothese fragile", "fragile", "incertitude", "incertain"]):
+        hypo = sit.get("hypotheses") or []
+        drivers = sit.get("drivers") or []
+        fragile_h = next((h for h in hypo if "demande" in h.get("libelle", "").lower()), hypo[0] if hypo else None)
+        fragile_d = min(drivers, key=lambda d: d.get("poids", 1)) if drivers else None
+        return (
+            f"L'hypothèse la plus fragile est : {fragile_h.get('libelle') + ' — ' + str(fragile_h.get('valeur')) if fragile_h else 'méthode demande (moyenne 7j × tendance)'}. "
+            f"Confiance globale : {sit.get('confiance', 0):.0%} ({sit.get('niveau_confiance', 'moyen')}). "
+            f"Facteur le plus sensible : {fragile_d.get('libelle') + ' (' + str(int(fragile_d.get('poids',0)*100))+'%)' if fragile_d else 'déficit'}. "
+            f"Si la demande était sur-estimée de 20%, le RaR passerait de {sit.get('revenue_at_risk',0):,.0f} à {max(0, (sit.get('deficit_potentiel',0)*0.8))* (sit.get('prix_unitaire',0) or 0):,.0f} FCFA."
+        )
+
     if any(w in q for w in ["boutique", "pourquoi cette boutique", "point de vente"]):
         return (
             f"{boutique} est prioritaire car elle cumule le déficit le plus élevé "
