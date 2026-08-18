@@ -81,36 +81,26 @@ export function DecisionScreen() {
             {d.description}
           </p>
 
-          {/* QUOI / OÙ / COMBIEN / POURQUOI / IMPACT */}
-          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            <Fact
-              q="Quoi ?"
-              a={d.produit?.nom ?? (isDist ? 'Réallocation stock' : 'Action visibilité')}
-            />
-            <Fact
-              q="Où ?"
-              a={
-                d.boutique_destination?.nom ??
-                (isDist ? '—' : 'Entreprise (global)')
-              }
-            />
-            <Fact
-              q="Combien ?"
-              a={
-                d.quantite != null
-                  ? `${formatNumber(d.quantite)} unités`
-                  : 'Campagne qualitative'
-              }
-            />
-            <Fact
-              q="Depuis ?"
-              a={d.boutique_source?.nom ?? (isDist ? 'Entrepôt / prod.' : '—')}
-            />
-            <Fact
-              q="Impact ?"
-              a={formatFCFA(d.revenu_potentiellement_protege, true)}
-              highlight
-            />
+          {/* QUOI / OÙ / COMBIEN / DEPUIS / IMPACT — Bento Toolfollio */}
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-12">
+            <div className="lg:col-span-3">
+              <Fact q="Quoi ?" a={d.produit?.nom ?? (isDist ? 'Réallocation stock' : 'Action visibilité')} />
+            </div>
+            <div className="lg:col-span-3">
+              <Fact q="Où ?" a={d.boutique_destination?.nom ?? (isDist ? '—' : 'Entreprise (global)')} />
+            </div>
+            <div className="lg:col-span-3">
+              <Fact
+                q="Combien ?"
+                a={d.quantite != null ? `${formatNumber(d.quantite)} unités` : 'Campagne qualitative'}
+              />
+            </div>
+            <div className="lg:col-span-3">
+              <Fact q="Depuis ?" a={d.boutique_source?.nom ?? (isDist ? 'Entrepôt / prod.' : '—')} />
+            </div>
+            <div className="lg:col-span-12">
+              <Fact q="Impact ?" a={formatFCFA(d.revenu_potentiellement_protege, true)} highlight large />
+            </div>
           </div>
         </div>
       </section>
@@ -231,18 +221,20 @@ function Fact({
   q,
   a,
   highlight,
+  large,
 }: {
   q: string
   a: string
   highlight?: boolean
+  large?: boolean
 }) {
   return (
-    <div className="rounded-xl border border-white/8 bg-charcoal-deep/50 p-3">
+    <div
+      className={`rounded-xl border p-3 transition hover:border-white/15 ${highlight ? 'border-sage/30 bg-gradient-to-br from-sage/10 via-charcoal-deep/50 to-charcoal-deep/50' : 'border-white/8 bg-charcoal-deep/50'} ${large ? 'md:p-4' : ''}`}
+    >
       <div className="text-[10px] uppercase tracking-[0.16em] text-mineral">{q}</div>
       <div
-        className={`mt-1.5 text-sm font-medium leading-snug ${
-          highlight ? 'text-sage-light' : 'text-bone'
-        }`}
+        className={`mt-1.5 font-medium leading-snug ${large ? 'text-base md:text-lg' : 'text-sm'} ${highlight ? 'text-sage-light' : 'text-bone'}`}
       >
         {a}
       </div>
