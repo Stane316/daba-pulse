@@ -1,7 +1,14 @@
 {
-  "generated_at": "2026-08-04T22:57:14.045963Z",
+  "generated_at": "2026-08-19T23:35:29.273813Z",
   "type": "synthetiques",
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "nb_lignes": 6720,
+  "nb_jours": 84,
+  "format": {
+    "csv": "ventes_stocks.csv (6 721 lignes avec entête)",
+    "sqlite": "growth_decision_os.db (tables ventes/boutiques/produits/visibilite/meta)"
+  },
+  "seed": 42,
   "boutiques": [
     {
       "id": "B001",
@@ -70,6 +77,66 @@
       "nom": "Ailes de poulet 1 kg",
       "categorie": "Volaille fraîche",
       "prix": 4100
+    },
+    {
+      "id": "P007",
+      "nom": "Poulet fumé entier",
+      "categorie": "Volaille transformée",
+      "prix": 9500
+    },
+    {
+      "id": "P008",
+      "nom": "Gésiers de poulet 500 g",
+      "categorie": "Volaille fraîche",
+      "prix": 2500
+    },
+    {
+      "id": "P009",
+      "nom": "Foies de poulet 500 g",
+      "categorie": "Volaille fraîche",
+      "prix": 2800
+    },
+    {
+      "id": "P010",
+      "nom": "Œufs x12",
+      "categorie": "Œufs",
+      "prix": 1400
+    },
+    {
+      "id": "P011",
+      "nom": "Œufs de caille x24",
+      "categorie": "Œufs",
+      "prix": 2200
+    },
+    {
+      "id": "P012",
+      "nom": "Canard entier",
+      "categorie": "Volaille premium",
+      "prix": 11000
+    },
+    {
+      "id": "P013",
+      "nom": "Dinde entière 4 kg",
+      "categorie": "Volaille premium",
+      "prix": 15000
+    },
+    {
+      "id": "P014",
+      "nom": "Aliment volaille ponte 25 kg",
+      "categorie": "Aliments",
+      "prix": 12500
+    },
+    {
+      "id": "P015",
+      "nom": "Aliment volaille chair 25 kg",
+      "categorie": "Aliments",
+      "prix": 11000
+    },
+    {
+      "id": "P016",
+      "nom": "Poussin d'un jour",
+      "categorie": "Élevage",
+      "prix": 900
     }
   ],
   "scenario_demo": {

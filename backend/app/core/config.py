@@ -48,12 +48,22 @@ class Settings(BaseSettings):
     api_port: int = 8000
     cors_origins: str = "*"
     data_path: str = str(Path(__file__).resolve().parents[3] / "data" / "sample")
+    # INCREMENT B — base SQLite du dataset (chemin absolu optionnel ; par défaut
+    # data_path/growth_decision_os.db). Vide = auto-détection dans data_path.
+    db_path: str = ""
     api_json_logs: bool = False
 
     openai_api_key: str = ""
     openai_base_url: str = "https://openrouter.ai/api/v1"
     openai_model: str = "openai/gpt-4o-mini"
     ai_enabled: bool = True
+
+    @property
+    def sqlite_db(self) -> str:
+        """Chemin de la base SQLite du dataset synthétique."""
+        if self.db_path:
+            return self.db_path
+        return str(Path(self.data_path) / "growth_decision_os.db")
 
     @property
     def origins(self) -> list[str]:

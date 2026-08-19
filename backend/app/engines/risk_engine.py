@@ -433,6 +433,17 @@ def build_executive_summary(store: DataStore) -> ExecutiveSummary:
     )
 
 
+def evaluate_state(etat: dict[str, Any]) -> ExecutiveSummary:
+    """Évaluation PURE d'un état de données (INCREMENT B).
+
+    Prend un état explicite (dict produit par `charger_etat_depuis_sqlite`
+    ou `DataStore.from_state`) — aucun accès disque, aucun singleton :
+    même état → mêmes résultats. Testable sans serveur ni fichier.
+    """
+    store = DataStore.from_state(etat)
+    return build_executive_summary(store)
+
+
 def get_situation(store: DataStore, situation_id: str) -> SituationRisque | None:
     summary = build_executive_summary(store)
     for s in summary.situations:

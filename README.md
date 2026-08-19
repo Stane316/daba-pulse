@@ -779,6 +779,12 @@ Business Memory
 
 Le MVP doit fonctionner avec des données synthétiques lorsque les données réelles de DABA ne sont pas disponibles.
 
+### Dataset (INCREMENT B — 20/08)
+
+- **Volume :** 6 720 lignes d'historique (5 boutiques × 16 produits × 84 jours, `seed 42`) — livré en **base SQLite** (`data/sample/growth_decision_os.db`, tables `ventes` / `boutiques` / `produits` / `visibilite` / `meta`) **et** en CSV (`ventes_stocks.csv`, 6 721 lignes avec entête).
+- **Chargement :** l'API préfère la base SQLite si présente (`data/sample/growth_decision_os.db`), sinon le CSV. `scripts/generate_synthetic_data.py` régénère les deux (reproductible).
+- **Scénario démo :** `B001` Plateau × `P005` Poulet entier premium — stock 8, demande 7 j ≈ 35, déficit 27, RaR **486 000 FCFA** (situation #1), réallocation 25 u depuis `B002` Cocody.
+
 ### Schéma minimal
 
 | Champ           | Exemple      | Utilisation               |
@@ -1356,6 +1362,8 @@ Le code reste la source de vérité pour le comportement réellement implément�
 **Status: Déployé — Production ready (hackathon)**
 
 **Live :** Frontend `https://dabapulse.netlify.app` (Netlify, `engineering-lead/mvp-foundation` → `main@13a57a5` + `EL 5a32ce8` HorizonX) + API `https://dabapulse-api.onrender.com` (Render, `region frankfurt`, `health /api/health` vert) — vérifié `bash scripts/smoke.sh https://dabapulse-api.onrender.com` **14 PASS** le 2026-08-07 (`B001×P005` 486 000 FCFA → simulate 486k protégé) — **Light/Dark** `Sun/Moon` + `count-up` + `parallax` + `27 particules` + `tunnel` opérationnels.
+
+**Dataset (20/08) :** `growth_decision_os.db` (SQLite, 6 720 lignes) + `ventes_stocks.csv` (6 721 lignes) — smoke local **16 PASS / 0 WARN / 0 FAIL** (`B001×P005` 486 000 → reco 25 u Cocody → simulate +30 protégé 486 000) — `pytest` **43 passed** — IA challengeable (7 intentions + 4 blocs).
 
 **CI :** `DabaPulse CI` verte (frontend `oxlint`/`typecheck`/`build 30.76kB + react 216kB + charts 386kB` code-split, backend `ruff`/`pip-audit clean`/`pytest 18`, `security` `starlette 1.3.1`).
 

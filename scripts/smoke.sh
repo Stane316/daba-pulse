@@ -73,8 +73,10 @@ curl_json "/" "DabaPulse" "Root"
 # 1 — Health (critique : data_loaded doit être true, ai_available false sans clé)
 curl_json "/api/health" '"status":"ok"' "Health"
 
-# 2 — Data status / preview (vérifie dataset synthétique chargé)
+# 2 — Data status / preview (vérifie dataset synthétique chargé — SQLite 6 720 lignes)
 curl_json "/api/data/status" '"valide":true' "Data status"
+curl_json "/api/data/status" '6720' "Data status (6 720 lignes)"
+curl_json "/api/data/status" 'sqlite' "Data status (source SQLite)"
 curl_json "/api/data/preview?n=2" '"nb_lignes"' "Data preview"
 
 # 3 — Executive (RaR total > 0, disclaimer présent)
@@ -89,7 +91,8 @@ else
     dist=$(echo "$exec_body" | jq -r '.revenue_at_risk_distribution // 0')
     rep=$(echo "$exec_body" | jq -r '.revenue_at_risk_reputation // 0')
     echo "   RaR total: $rar | dist: $dist | rep: $rep"
-    if [ "$rar" -gt 0 ] 2>/dev/null; then pass=$((pass+1)); else echo -e "   ${YELLOW}WARN RaR total = 0${NC}"; warn=$((warn+1)); fi
+    # Comparaison numérique robuste (le total peut être un flottant « 1080270.0 »)
+    if [ "$(echo "$rar" | awk '{print (($1+0) > 0)}')" = "1" ]; then pass=$((pass+1)); else echo -e "   ${YELLOW}WARN RaR total = 0${NC}"; warn=$((warn+1)); fi
     if echo "$exec_body" | jq -e '.disclaimer' >/dev/null 2>&1; then echo "   Disclaimer: présent"; else echo -e "   ${YELLOW}WARN disclaimer manquant${NC}"; warn=$((warn+1)); fi
     # Vérifie scénario démo cible
     if echo "$exec_body" | grep -q "dist-B001-P005"; then echo "   Scénario B001×P005: présent"; else echo -e "   ${YELLOW}WARN B001×P005 absent${NC}"; warn=$((warn+1)); fi
@@ -112,7 +115,7 @@ sim_code=$(echo "$sim_body" | tail -n1); sim_body=$(echo "$sim_body" | sed '$d')
 if [ "$sim_code" != "200" ]; then echo -e "${RED}FAIL (HTTP $sim_code)${NC}"; echo "$sim_body" | head -n 40; fail=$((fail+1));
 else
   if echo "$sim_body" | grep -q "486000"; then echo -e "${GREEN}OK (HTTP 200, 486k présent)${NC}"; else echo -e "${YELLOW}WARN (HTTP 200, 486k non trouvé)${NC}"; fi
-  if [ "$has_jq" = "1" ] && [ "$RAW" = "0" ]; then echo "$sim_body" | jq -C . | head -n 50; else echo "$sim_body" | head -n 60; fi
+  if [ "$has_jq" = "1" ] && [ "$RAW" = "0" ]; then echo "$sim_body" | jq -C . | head -n 50 || true; else echo "$sim_body" | head -n 60; fi
   pass=$((pass+1))
 fi
 
@@ -123,7 +126,7 @@ echo -n "▶ Export POST — POST /api/export/decision ... "
 exp_body=$(curl -sS -w "\n%{http_code}" -X POST "${BASE}/api/export/decision" -H "Content-Type: application/json" -d '{"situation_id":"dist-B001-P005","quantite":30,"format":"json"}' 2>&1) || { echo -e "${RED}FAIL${NC}"; echo "$exp_body" | head -n 20; fail=$((fail+1)); }
 exp_code=$(echo "$exp_body" | tail -n1); exp_body=$(echo "$exp_body" | sed '$d')
 if [ "$exp_code" != "200" ]; then echo -e "${RED}FAIL (HTTP $exp_code)${NC}"; echo "$exp_body" | head -n 40; fail=$((fail+1));
-else echo -e "${GREEN}OK (HTTP 200)${NC}"; if [ "$has_jq" = "1" ]; then echo "$exp_body" | jq -C . | head -n 30; else echo "$exp_body" | head -n 40; fi; pass=$((pass+1)); fi
+else echo -e "${GREEN}OK (HTTP 200)${NC}"; if [ "$has_jq" = "1" ]; then echo "$exp_body" | jq -C . | head -n 30 || true; else echo "$exp_body" | head -n 40; fi; pass=$((pass+1)); fi
 
 # 8 — Hypotheses
 curl_json "/api/hypotheses" "horizon_jours" "Hypotheses"
@@ -135,7 +138,7 @@ ai_code=$(echo "$ai_body" | tail -n1); ai_body=$(echo "$ai_body" | sed '$d')
 if [ "$ai_code" != "200" ]; then echo -e "${RED}FAIL (HTTP $ai_code)${NC}"; echo "$ai_body" | head -n 40; fail=$((fail+1));
 else
   if echo "$ai_body" | grep -q '"fallback":true'; then echo -e "${GREEN}OK (HTTP 200, fallback=true)${NC}"; else echo -e "${YELLOW}WARN (HTTP 200, fallback non détecté — clé LLM peut être configurée)${NC}"; fi
-  if [ "$has_jq" = "1" ] && [ "$RAW" = "0" ]; then echo "$ai_body" | jq -C . | head -n 40; else echo "$ai_body" | head -n 60; fi
+  if [ "$has_jq" = "1" ] && [ "$RAW" = "0" ]; then echo "$ai_body" | jq -C . | head -n 40 || true; else echo "$ai_body" | head -n 60; fi
   pass=$((pass+1))
 fi
 

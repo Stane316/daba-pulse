@@ -127,6 +127,8 @@ data/temp/
 *.db
 *.sqlite
 *.sqlite3
+# Exception : base SQLite du dataset synthétique de démo (versionnée — INCREMENT B)
+!data/sample/growth_decision_os.db
 
 # ============================================================
 # 4. MACHINE LEARNING / AI ARTIFACTS
