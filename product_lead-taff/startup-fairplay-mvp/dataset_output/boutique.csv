@@ -1,0 +1,7 @@
+store_id,nom,ville,zone,type,date_ouverture,actif
+10,Boutique Cotonou-Centre,Cotonou,Cotonou-Est,boutique_propre,2021-03-01,1
+20,Boutique Akpakpa,Cotonou,Cotonou-Est,boutique_propre,2021-09-15,1
+30,Boutique Cadjehoun,Cotonou,Cotonou-Ouest,boutique_propre,2022-01-10,1
+40,Boutique Fidjrossè,Cotonou,Cotonou-Ouest,revendeur,2022-06-20,1
+50,Boutique Porto-Novo,Porto-Novo,Peripherie,revendeur,2023-02-05,1
+60,Boutique Calavi,Abomey-Calavi,Peripherie,distributeur,2023-08-12,1
