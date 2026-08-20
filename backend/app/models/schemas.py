@@ -157,6 +157,13 @@ class AIExplainResponse(BaseModel):
     sources: list[str]
     fallback: bool = False
     model: Optional[str] = None
+    # INC-20 — IA challengeable : 4 blocs séparés Faits / Hypothèses /
+    # Interprétation / Incertitude + intention détectée (rétro-compatibles).
+    faits: Optional[list[str]] = None
+    hypotheses: Optional[list[str]] = None
+    interpretation: Optional[str] = None
+    incertitude: Optional[list[str]] = None
+    intention: Optional[str] = None
 
 
 class DataStatus(BaseModel):

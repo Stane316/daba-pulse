@@ -1,8 +1,16 @@
-"""Chargement et validation des données synthétiques."""
+"""Chargement et validation des données synthétiques.
+
+INCREMENT B — support de la base SQLite `growth_decision_os.db` :
+- `load()` préfère la base SQLite si présente dans data_path (sinon CSV) ;
+- `charger_etat_depuis_sqlite(path)` charge un état PUR (dict) sans toucher
+  au singleton — le Risk Engine peut alors évaluer sans état global ;
+- `DataStore.from_state(etat)` reconstruit un store depuis un état pur.
+"""
 
 from __future__ import annotations
 
 import json
+import sqlite3
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -12,9 +20,20 @@ import pandas as pd
 from app.core.config import get_settings
 from app.models.schemas import DataStatus
 
+_CSV_REQUIRED = [
+    "date",
+    "boutique_id",
+    "produit_id",
+    "stock",
+    "ventes",
+    "prix_unitaire",
+    "stock_cible",
+    "delai_reappro",
+]
+
 
 class DataStore:
-    """In-memory data store loaded from CSV / JSON sample files."""
+    """In-memory data store loaded from CSV / JSON sample files (ou SQLite)."""
 
     def __init__(self) -> None:
         self.ventes: pd.DataFrame = pd.DataFrame()
@@ -27,12 +46,37 @@ class DataStore:
         self._source_label: str = "aucune"
         self._data_type: str = "synthetiques"
 
+    @classmethod
+    def from_state(cls, etat: dict[str, Any]) -> "DataStore":
+        """Reconstruit un store depuis un état PUR (dict) — aucun accès disque."""
+        s = cls()
+        s.ventes = etat.get("ventes", pd.DataFrame()).copy()
+        s.boutiques = dict(etat.get("boutiques", {}))
+        s.produits = dict(etat.get("produits", {}))
+        s.visibilite = dict(etat.get("visibilite", {}))
+        s.meta = dict(etat.get("meta", {}))
+        s._source_label = str(etat.get("_source_label", "etat"))
+        s._data_type = str(etat.get("_data_type", "synthetiques"))
+        s.warnings = list(etat.get("_warnings", []))
+        s.loaded_at = datetime.utcnow().isoformat() + "Z"
+        return s
+
     @property
     def is_loaded(self) -> bool:
         return not self.ventes.empty
 
     def load(self, data_path: str | Path | None = None) -> DataStatus:
         path = Path(data_path or get_settings().data_path)
+        db_file = path / "growth_decision_os.db"
+        if db_file.exists():
+            return self.load_from_sqlite(path)
+        return self.load_from_csv(path)
+
+    # ------------------------------------------------------------------
+    # Chargement CSV (voie historique — conservée)
+    # ------------------------------------------------------------------
+
+    def load_from_csv(self, path: Path) -> DataStatus:
         self.warnings = []
         self._source_label = str(path)
         self._data_type = "synthetiques"
@@ -45,27 +89,8 @@ class DataStore:
             )
 
         df = pd.read_csv(ventes_file)
-        required = [
-            "date",
-            "boutique_id",
-            "produit_id",
-            "stock",
-            "ventes",
-            "prix_unitaire",
-            "stock_cible",
-            "delai_reappro",
-        ]
-        missing = [c for c in required if c not in df.columns]
-        if missing:
-            raise ValueError(f"Colonnes manquantes: {missing}")
-
-        df["date"] = pd.to_datetime(df["date"])
-        for col in ["stock", "ventes", "prix_unitaire", "stock_cible", "delai_reappro"]:
-            df[col] = pd.to_numeric(df[col], errors="coerce")
-
-        if df[required[3:]].isna().any().any():
-            self.warnings.append("Valeurs manquantes détectées et interpolées à 0.")
-            df = df.fillna(0)
+        df, warns = self._ingest_ventes(df)
+        self.warnings.extend(warns)
 
         self.ventes = df.sort_values("date")
 
@@ -85,6 +110,84 @@ class DataStore:
         self._rebuild_refs_from_ventes()
 
         return self.status()
+
+    # ------------------------------------------------------------------
+    # Chargement SQLite (INCREMENT B — voie préférée quand la base existe)
+    # ------------------------------------------------------------------
+
+    def load_from_sqlite(self, path: str | Path | None = None) -> DataStatus:
+        """Charge le dataset depuis `growth_decision_os.db` (ou db_path config)."""
+        settings = get_settings()
+        db_file = Path(
+            settings.sqlite_db
+            if path is None
+            else Path(path) / "growth_decision_os.db"
+        )
+        self.warnings = []
+        self._source_label = f"sqlite:{db_file.name}"
+        self._data_type = "synthetiques"
+
+        if not db_file.exists():
+            raise FileNotFoundError(
+                f"Base SQLite introuvable: {db_file}. "
+                "Exécutez scripts/generate_synthetic_data.py"
+            )
+
+        con = sqlite3.connect(db_file)
+        try:
+            df = pd.read_sql_query("SELECT * FROM ventes", con)
+            self.boutiques = {
+                str(r["id"]): r.to_dict() for _, r in pd.read_sql_query(
+                    "SELECT * FROM boutiques", con
+                ).iterrows()
+            }
+            self.produits = {
+                str(r["id"]): r.to_dict() for _, r in pd.read_sql_query(
+                    "SELECT * FROM produits", con
+                ).iterrows()
+            }
+            self.visibilite = self._read_kv_table(con, "visibilite")
+            self.meta = self._read_kv_table(con, "meta")
+        finally:
+            con.close()
+
+        df, warns = self._ingest_ventes(df)
+        self.warnings.extend(warns)
+        self.ventes = df.sort_values("date")
+        self.loaded_at = datetime.utcnow().isoformat() + "Z"
+        self._rebuild_refs_from_ventes()
+
+        return self.status()
+
+    @staticmethod
+    def _read_kv_table(con: sqlite3.Connection, table: str) -> dict[str, Any]:
+        """Lit une table (cle, valeur JSON) → dict Python."""
+        out: dict[str, Any] = {}
+        for cle, valeur in con.execute(f"SELECT cle, valeur FROM {table}"):
+            try:
+                out[cle] = json.loads(valeur)
+            except (json.JSONDecodeError, TypeError):
+                out[cle] = valeur
+        return out
+
+    @staticmethod
+    def _ingest_ventes(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+        """Validation + coercition commune CSV / SQLite (pure)."""
+        missing = [c for c in _CSV_REQUIRED if c not in df.columns]
+        if missing:
+            raise ValueError(f"Colonnes manquantes: {missing}")
+
+        df = df.copy()
+        df["date"] = pd.to_datetime(df["date"])
+        for col in ["stock", "ventes", "prix_unitaire", "stock_cible", "delai_reappro"]:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        warnings: list[str] = []
+        if df[_CSV_REQUIRED[3:]].isna().any().any():
+            warnings.append("Valeurs manquantes détectées et interpolées à 0.")
+            df = df.fillna(0)
+
+        return df, warnings
 
     def load_ventes_dataframe(
         self,
@@ -215,6 +318,48 @@ class DataStore:
         return self.produits.get(
             pid, {"id": pid, "nom": pid, "categorie": "?", "prix": 0}
         )
+
+
+def charger_etat_depuis_sqlite(path: str | Path | None = None) -> dict[str, Any]:
+    """Charge un état PUR (dict) depuis la base SQLite — aucun singleton touché.
+
+    Port de l'idée Product (`risk_engine.charger_etat_depuis_sqlite`) :
+    séparation stricte entre le chargement (impur) et le calcul (pur).
+    """
+    settings = get_settings()
+    db_file = Path(
+        settings.sqlite_db if path is None else Path(path) / "growth_decision_os.db"
+    )
+    if not db_file.exists():
+        raise FileNotFoundError(f"Base SQLite introuvable: {db_file}")
+
+    con = sqlite3.connect(db_file)
+    try:
+        ventes = pd.read_sql_query("SELECT * FROM ventes", con)
+        ventes, warns = DataStore._ingest_ventes(ventes)
+        boutiques = {
+            str(r["id"]): r.to_dict()
+            for _, r in pd.read_sql_query("SELECT * FROM boutiques", con).iterrows()
+        }
+        produits = {
+            str(r["id"]): r.to_dict()
+            for _, r in pd.read_sql_query("SELECT * FROM produits", con).iterrows()
+        }
+        visibilite = DataStore._read_kv_table(con, "visibilite")
+        meta = DataStore._read_kv_table(con, "meta")
+    finally:
+        con.close()
+
+    return {
+        "ventes": ventes,
+        "boutiques": boutiques,
+        "produits": produits,
+        "visibilite": visibilite,
+        "meta": meta,
+        "_source_label": f"sqlite:{db_file.name}",
+        "_data_type": "synthetiques",
+        "_warnings": warns,
+    }
 
 
 # Singleton

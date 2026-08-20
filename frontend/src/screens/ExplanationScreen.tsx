@@ -23,6 +23,17 @@ const SUGGESTIONS = [
   'Et si on n\'agit pas ?',
 ]
 
+// INC-20 — libellés lisibles des intentions détectées par le moteur.
+const INTENT_LABELS: Record<string, string> = {
+  EXPLAIN: 'Expliquer',
+  CHALLENGE: 'Challenger la recommandation',
+  COMPARE: 'Comparer des scénarios',
+  ALTERNATIVE: 'Explorer une alternative',
+  JUSTIFY: 'Justifier la décision',
+  RESUME: 'Résumer',
+  LIMITS: 'Tester les limites — hypothèses fragiles',
+}
+
 export function ExplanationScreen() {
   const { loading, error, selectedId, selected, reload } = usePulse()
   const navigate = useNavigate()
@@ -82,6 +93,20 @@ export function ExplanationScreen() {
       />
     )
 
+  // INC-20 — 4 blocs (rétro-compatibles si l'API répond sans eux).
+  const faits = explanation?.faits?.length
+    ? explanation.faits
+    : explanation
+      ? [explanation.situation, ...explanation.facteurs]
+      : undefined
+  const hypotheses = explanation?.hypotheses?.length
+    ? explanation.hypotheses
+    : undefined
+  const interpretation = explanation?.interpretation || explanation?.decision
+  const incertitude = explanation?.incertitude?.length
+    ? explanation.incertitude
+    : undefined
+
   return (
     <div>
       <SceneQuestion
@@ -113,16 +138,58 @@ export function ExplanationScreen() {
       {/* Éditorial — max-w-3xl centré (HorizonX editorial, pas dashboard) */}
       <div className="mx-auto max-w-3xl">
         <div className="mb-6 rounded-xl border border-white/5 bg-charcoal/30 px-4 py-3 text-center text-[11px] leading-relaxed text-mineral">
-          Cette explication s'appuie exclusivement sur les résultats du <span className="text-sand">Risk Engine</span>, du{' '}
-          <span className="text-sand">Decision Engine</span> et du <span className="text-sand">simulateur</span>. Aucun chiffre
+          Cette explication s'appuie exclusivement sur les résultats du{' '}
+          <span className="text-sand">Risk Engine</span>, du{' '}
+          <span className="text-sand">Decision Engine</span> et du{' '}
+          <span className="text-sand">simulateur</span>. Aucun chiffre
           n'est inventé — l'application reste fonctionnelle sans modèle de langage.
         </div>
 
+        {explanation?.intention && (
+          <div className="mb-5 flex items-center gap-2.5 text-[11px] uppercase tracking-[0.16em] text-mineral">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber" />
+            Intention détectée :{' '}
+            <span className="font-medium text-bone">
+              {INTENT_LABELS[explanation.intention] ?? explanation.intention}
+            </span>
+          </div>
+        )}
+
         <div className="grid gap-4 md:grid-cols-2">
-          <StoryBlock step="01" title="Situation" body={explanation?.situation} loading={busy && !explanation} accent />
-          <StoryBlock step="02" title="Facteurs" body={explanation?.facteurs?.length ? explanation.facteurs.map((f) => `• ${f}`).join('\n') : undefined} loading={busy && !explanation} />
-          <StoryBlock step="03" title="Décision" body={explanation?.decision} loading={busy && !explanation} />
-          <StoryBlock step="04" title="Impact" body={explanation?.impact} loading={busy && !explanation} accent />
+          <ChallengeBlock
+            step="01"
+            title="Faits"
+            badge="calculé par le moteur"
+            tone="sage"
+            items={faits}
+            loading={busy && !explanation}
+          />
+          <ChallengeBlock
+            step="02"
+            title="Hypothèses"
+            badge="supposé · versionné"
+            tone="amber"
+            items={hypotheses}
+            fallback="L'API n'a pas fourni le bloc Hypothèses (voir Synthèse)."
+            loading={busy && !explanation}
+          />
+          <ChallengeBlock
+            step="03"
+            title="Interprétation"
+            badge="lecture décisionnelle"
+            tone="sage"
+            body={interpretation}
+            loading={busy && !explanation}
+          />
+          <ChallengeBlock
+            step="04"
+            title="Incertitude"
+            badge="ce qui pourrait changer la décision"
+            tone="risk"
+            items={incertitude}
+            fallback="L'API n'a pas fourni le bloc Incertitude (voir Synthèse)."
+            loading={busy && !explanation}
+          />
         </div>
 
         {explanation?.reponse && (
@@ -173,38 +240,57 @@ export function ExplanationScreen() {
   )
 }
 
-function StoryBlock({
+const TONES: Record<'sage' | 'amber' | 'risk', string> = {
+  sage: 'border-sage/25 bg-sage/5',
+  amber: 'border-amber/20 bg-amber/5',
+  risk: 'border-risk/25 bg-risk/5',
+}
+
+function ChallengeBlock({
   step,
   title,
+  badge,
+  tone,
+  items,
   body,
+  fallback,
   loading,
-  delay,
-  accent,
 }: {
   step: string
   title: string
+  badge: string
+  tone: 'sage' | 'amber' | 'risk'
+  items?: string[]
   body?: string
+  fallback?: string
   loading?: boolean
-  delay?: number
-  accent?: boolean
 }) {
   return (
-    <Panel
-      delay={delay}
-      className={accent ? 'border-sage/25 bg-sage/5' : undefined}
-    >
+    <Panel className={TONES[tone]}>
       <div className="mb-2 flex items-center gap-2">
         <span className="num text-xs text-amber">{step}</span>
         <span className="text-[11px] uppercase tracking-[0.18em] text-mineral">
           {title}
         </span>
+        <span className="ml-auto rounded-full border border-white/8 bg-white/5 px-2 py-0.5 text-[9px] uppercase tracking-[0.12em] text-mineral">
+          {badge}
+        </span>
       </div>
       {loading ? (
         <div className="h-16 animate-pulse rounded-lg bg-white/5" />
+      ) : items?.length ? (
+        <ul className="space-y-1.5">
+          {items.map((item) => (
+            <li key={item} className="flex gap-2 text-sm leading-relaxed text-bone-dim">
+              <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-amber/70" />
+              <span className="whitespace-pre-wrap">{item}</span>
+            </li>
+          ))}
+        </ul>
+      ) : body ? (
+        <p className="whitespace-pre-wrap text-sm leading-relaxed text-bone-dim">{body}</p>
       ) : (
-        <p className="whitespace-pre-wrap text-sm leading-relaxed text-bone-dim">
-          {body || '—'}
-        </p>
+        <p className="text-sm leading-relaxed text-bone-dim/60">{fallback ?? '—'}</p>
       )}
     </Panel>
   )

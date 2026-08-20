@@ -138,6 +138,12 @@ export interface AIExplainResponse {
   sources: string[]
   fallback: boolean
   model: string | null
+  // INC-20 — IA challengeable : 4 blocs + intention détectée (rétro-compatibles)
+  faits?: string[]
+  hypotheses?: string[]
+  interpretation?: string
+  incertitude?: string[]
+  intention?: string | null
 }
 
 export interface DataStatus {
